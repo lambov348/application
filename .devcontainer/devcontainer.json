@@ -1,0 +1,20 @@
+{
+  "name": "MöbelStock24",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:22",
+  "features": {},
+  // После создания среды сразу ставим зависимости, создаём БД и тестовые данные.
+  "postCreateCommand": "npm install && npm run setup",
+  // Порт 3000 (Next.js) автоматически пробрасывается наружу — Codespaces даст публичный URL.
+  "forwardPorts": [3000],
+  "portsAttributes": {
+    "3000": {
+      "label": "MöbelStock24",
+      "onAutoForward": "openPreview"
+    }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": ["Prisma.prisma"]
+    }
+  }
+}

@@ -1,0 +1,29 @@
+# Деплой на Render одним «Blueprint» — без CLI и без Docker.
+# Как развернуть:
+#   1. Зайдите на https://render.com и войдите через GitHub (бесплатно).
+#   2. New → Blueprint → выберите репозиторий lambov348/application
+#      и ветку claude/request-management-app-t5lxhh.
+#   3. Render прочитает этот файл, нажмите Apply — через пару минут
+#      появится публичный URL вида https://moebelstock24.onrender.com
+#
+# Заметки:
+# - База: SQLite на диске сервиса. На бесплатном плане файловая система
+#   временная, поэтому демо-данные пере-заполняются при каждом запуске
+#   (это удобно для демонстрации). Для постоянных данных смените план на
+#   Starter с диском или подключите PostgreSQL (провайдер в schema.prisma).
+# - SESSION_SECRET Render генерирует автоматически.
+services:
+  - type: web
+    name: moebelstock24
+    runtime: node
+    plan: free
+    branch: claude/request-management-app-t5lxhh
+    buildCommand: npm install --include=dev && npx prisma generate && npm run build
+    startCommand: npx prisma db push --skip-generate && npm run db:seed && npm run start
+    envVars:
+      - key: DATABASE_URL
+        value: file:./prod.db
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: NODE_VERSION
+        value: "22"

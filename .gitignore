@@ -29,3 +29,8 @@ npm-debug.log*
 # typescript
 next-env.d.ts
 *.tsbuildinfo
+
+# hosting/local sqlite
+/prisma/prod.db
+/prisma/prod.db-journal
+/prod.db
