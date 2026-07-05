@@ -1,0 +1,69 @@
+// Prisma schema для MöbelStock24.
+// Для перехода на PostgreSQL достаточно поменять provider на "postgresql"
+// и DATABASE_URL в .env — модели менять не нужно.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Пользователи системы: администратор и работники.
+// Клиенты НЕ регистрируются — заявку можно оставить анонимно.
+model User {
+  id           String        @id @default(cuid())
+  name         String
+  email        String        @unique // используется как логин
+  passwordHash String
+  role         String        @default("worker") // "admin" | "worker"
+  active       Boolean       @default(true)
+  createdAt    DateTime      @default(now())
+  tasks        Task[]
+  logs         ActivityLog[]
+}
+
+// Заявка клиента. Числовой id служит человекочитаемым номером заявки (№ 1, 2, ...).
+model Request {
+  id            Int           @id @default(autoincrement())
+  clientName    String
+  clientContact String
+  serviceType   String
+  description   String
+  address       String
+  preferredDate DateTime?
+  photos        String        @default("[]") // JSON-массив путей к фото
+  status        String        @default("new") // new | assigned | in_progress | done | cancelled
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  task          Task?
+  logs          ActivityLog[]
+}
+
+// Назначение заявки конкретному работнику.
+model Task {
+  id            String   @id @default(cuid())
+  requestId     Int      @unique
+  request       Request  @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  workerId      String
+  worker        User     @relation(fields: [workerId], references: [id])
+  status        String   @default("assigned") // assigned | in_progress | done
+  workerComment String?
+  resultPhotos  String   @default("[]") // JSON-массив путей к фото результата
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+// История изменений по заявке (кто и что сделал).
+model ActivityLog {
+  id        Int      @id @default(autoincrement())
+  requestId Int
+  request   Request  @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  actorId   String?
+  actor     User?    @relation(fields: [actorId], references: [id])
+  action    String // краткий код действия
+  note      String? // человекочитаемое описание
+  createdAt DateTime @default(now())
+}

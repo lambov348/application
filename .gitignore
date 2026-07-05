@@ -1,0 +1,31 @@
+# dependencies
+/node_modules
+
+# next.js
+/.next/
+/out/
+
+# production
+/build
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+
+# env
+.env*.local
+
+# database (SQLite) — генерируется локально через seed
+/prisma/dev.db
+/prisma/dev.db-journal
+
+# uploads — пользовательские файлы не коммитим, папку сохраняем через .gitkeep
+/storage/uploads/*
+!/storage/uploads/.gitkeep
+
+# typescript
+next-env.d.ts
+*.tsbuildinfo
