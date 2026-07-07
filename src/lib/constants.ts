@@ -1,5 +1,5 @@
-// Централизованные словари статусов и подписей — используются во всех ролях,
-// чтобы статус отображался одинаково у клиента, админа и работника.
+// Языконезависимые константы: коды статусов, цвета бейджей, слаги услуг.
+// Все подписи для интерфейса живут в src/lib/i18n.ts.
 
 export type RequestStatus =
   | "new"
@@ -10,15 +10,7 @@ export type RequestStatus =
 
 export type TaskStatus = "assigned" | "in_progress" | "done";
 
-export const REQUEST_STATUS_LABELS: Record<RequestStatus, string> = {
-  new: "Новая",
-  assigned: "Назначена",
-  in_progress: "В работе",
-  done: "Выполнена",
-  cancelled: "Отменена",
-};
-
-// Цветовые классы Tailwind для бейджей статусов.
+// Цветовые классы Tailwind для бейджей статусов (не зависят от языка).
 export const REQUEST_STATUS_STYLES: Record<RequestStatus, string> = {
   new: "bg-blue-100 text-blue-800",
   assigned: "bg-amber-100 text-amber-800",
@@ -27,69 +19,8 @@ export const REQUEST_STATUS_STYLES: Record<RequestStatus, string> = {
   cancelled: "bg-gray-200 text-gray-700",
 };
 
-export const TASK_STATUS_LABELS: Record<TaskStatus, string> = {
-  assigned: "Принять в работу",
-  in_progress: "В работе",
-  done: "Выполнено",
-};
-
-// Порядок статусов задачи для работника: Принял → В работе → Выполнено.
+// Порядок статусов задачи для исполнителя: принял → в работе → выполнено.
 export const TASK_STATUS_FLOW: TaskStatus[] = ["assigned", "in_progress", "done"];
-
-// Категории услуг в духе TaskRabbit: витрина на главной + выбор в форме заявки.
-export type ServiceCategory = {
-  slug: string;
-  title: string;
-  emoji: string;
-  description: string;
-};
-
-export const SERVICE_CATEGORIES: ServiceCategory[] = [
-  {
-    slug: "assembly",
-    title: "Сборка мебели",
-    emoji: "🛠️",
-    description: "Сборка и разборка шкафов, кроватей, кухонь и мебели IKEA.",
-  },
-  {
-    slug: "moving",
-    title: "Помощь с переездом",
-    emoji: "📦",
-    description: "Погрузка, разгрузка и переезд квартиры или офиса.",
-  },
-  {
-    slug: "transport",
-    title: "Перевозка и доставка",
-    emoji: "🚚",
-    description: "Доставка и перевозка мебели по городу с подъёмом на этаж.",
-  },
-  {
-    slug: "mounting",
-    title: "Монтаж на стену",
-    emoji: "🖼️",
-    description: "Навеска полок, картин, зеркал и телевизоров.",
-  },
-  {
-    slug: "cleaning",
-    title: "Уборка и вынос",
-    emoji: "🧹",
-    description: "Уборка после переезда и вынос старой мебели.",
-  },
-  {
-    slug: "repair",
-    title: "Мелкий ремонт",
-    emoji: "🔧",
-    description: "Небольшой домашний ремонт и мелкие бытовые работы.",
-  },
-];
-
-// Плоский список названий услуг — используется в форме и валидации.
-export const SERVICE_TYPES: string[] = SERVICE_CATEGORIES.map((c) => c.title);
-
-export function categoryBySlug(slug?: string | null): ServiceCategory | undefined {
-  if (!slug) return undefined;
-  return SERVICE_CATEGORIES.find((c) => c.slug === slug);
-}
 
 export const ALL_REQUEST_STATUSES: RequestStatus[] = [
   "new",
@@ -98,3 +29,28 @@ export const ALL_REQUEST_STATUSES: RequestStatus[] = [
   "done",
   "cancelled",
 ];
+
+// Слаги услуг — стабильные идентификаторы. Подписи берутся из i18n по слагу.
+export type ServiceSlug =
+  | "assembly"
+  | "moving"
+  | "transport"
+  | "mounting"
+  | "cleaning"
+  | "repair";
+
+// Слаг + эмодзи (эмодзи тоже не зависит от языка).
+export const SERVICE_CATEGORIES: { slug: ServiceSlug; emoji: string }[] = [
+  { slug: "assembly", emoji: "🛠️" },
+  { slug: "moving", emoji: "📦" },
+  { slug: "transport", emoji: "🚚" },
+  { slug: "mounting", emoji: "🖼️" },
+  { slug: "cleaning", emoji: "🧹" },
+  { slug: "repair", emoji: "🔧" },
+];
+
+export const SERVICE_SLUGS: ServiceSlug[] = SERVICE_CATEGORIES.map((c) => c.slug);
+
+export function isServiceSlug(value: string): value is ServiceSlug {
+  return (SERVICE_SLUGS as string[]).includes(value);
+}

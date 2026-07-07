@@ -1,19 +1,21 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { getLocale } from "@/lib/i18n.server";
 
 export const metadata: Metadata = {
-  title: "MöbelStock24 — заявки на перевозку мебели",
+  title: "MöbelStock24 — Möbeltransport & Montage",
   description:
-    "Оставьте заявку на перевозку, доставку и сборку мебели. MöbelStock24.",
+    "Anfrage für Möbeltransport, Lieferung und Montage. MöbelStock24.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const locale = await getLocale();
   return (
-    <html lang="ru">
+    <html lang={locale}>
       <body>{children}</body>
     </html>
   );

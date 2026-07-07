@@ -3,13 +3,36 @@
 import { useActionState } from "react";
 import Link from "next/link";
 import { createOrder, OrderFormState } from "./actions";
-import { SERVICE_TYPES } from "@/lib/constants";
 import SubmitButton from "@/components/SubmitButton";
 
 const initialState: OrderFormState = {};
 
-// Форма заявки клиента. Валидация дублируется на сервере (см. actions.ts).
-export default function OrderForm({ preselected }: { preselected?: string }) {
+type Labels = {
+  nameLabel: string;
+  contactLabel: string;
+  serviceLabel: string;
+  descriptionLabel: string;
+  descriptionPlaceholder: string;
+  addressLabel: string;
+  dateLabel: string;
+  photosLabel: string;
+  photosHint: string;
+  submit: string;
+  submitting: string;
+};
+
+// Форма заявки клиента. Подписи приходят с сервера (перевод), валидация — на сервере.
+export default function OrderForm({
+  labels,
+  services,
+  preselected,
+  backHome,
+}: {
+  labels: Labels;
+  services: { slug: string; title: string }[];
+  preselected?: string;
+  backHome: string;
+}) {
   const [state, formAction] = useActionState(createOrder, initialState);
 
   return (
@@ -23,13 +46,13 @@ export default function OrderForm({ preselected }: { preselected?: string }) {
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
           <label className="label" htmlFor="clientName">
-            Ваше имя *
+            {labels.nameLabel}
           </label>
           <input id="clientName" name="clientName" className="input" required />
         </div>
         <div>
           <label className="label" htmlFor="clientContact">
-            Телефон или контакт *
+            {labels.contactLabel}
           </label>
           <input
             id="clientContact"
@@ -43,18 +66,18 @@ export default function OrderForm({ preselected }: { preselected?: string }) {
 
       <div>
         <label className="label" htmlFor="serviceType">
-          Тип услуги *
+          {labels.serviceLabel}
         </label>
         <select
           id="serviceType"
           name="serviceType"
           className="input"
-          defaultValue={preselected ?? SERVICE_TYPES[0]}
+          defaultValue={preselected ?? services[0]?.slug}
           required
         >
-          {SERVICE_TYPES.map((s) => (
-            <option key={s} value={s}>
-              {s}
+          {services.map((s) => (
+            <option key={s.slug} value={s.slug}>
+              {s.title}
             </option>
           ))}
         </select>
@@ -62,13 +85,13 @@ export default function OrderForm({ preselected }: { preselected?: string }) {
 
       <div>
         <label className="label" htmlFor="description">
-          Описание задачи *
+          {labels.descriptionLabel}
         </label>
         <textarea
           id="description"
           name="description"
           className="input min-h-[96px]"
-          placeholder="Что нужно сделать, сколько предметов, есть ли лифт и т.д."
+          placeholder={labels.descriptionPlaceholder}
           required
         />
       </div>
@@ -76,13 +99,13 @@ export default function OrderForm({ preselected }: { preselected?: string }) {
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
           <label className="label" htmlFor="address">
-            Адрес *
+            {labels.addressLabel}
           </label>
           <input id="address" name="address" className="input" required />
         </div>
         <div>
           <label className="label" htmlFor="preferredDate">
-            Желаемые дата и время
+            {labels.dateLabel}
           </label>
           <input
             id="preferredDate"
@@ -95,7 +118,7 @@ export default function OrderForm({ preselected }: { preselected?: string }) {
 
       <div>
         <label className="label" htmlFor="photos">
-          Фото (по желанию)
+          {labels.photosLabel}
         </label>
         <input
           id="photos"
@@ -105,16 +128,14 @@ export default function OrderForm({ preselected }: { preselected?: string }) {
           multiple
           className="block w-full text-sm text-gray-600 file:mr-3 file:rounded-lg file:border-0 file:bg-brand-light file:px-3 file:py-2 file:text-sm file:font-medium file:text-brand"
         />
-        <p className="mt-1 text-xs text-gray-400">
-          Можно прикрепить несколько фото (до 8 МБ каждое).
-        </p>
+        <p className="mt-1 text-xs text-gray-400">{labels.photosHint}</p>
       </div>
 
       <div className="flex items-center justify-between pt-2">
         <Link href="/" className="text-sm text-gray-500 hover:text-gray-700">
-          ← На главную
+          ← {backHome}
         </Link>
-        <SubmitButton>Отправить заявку</SubmitButton>
+        <SubmitButton pendingText={labels.submitting}>{labels.submit}</SubmitButton>
       </div>
     </form>
   );

@@ -3,14 +3,17 @@ import SiteHeader from "@/components/SiteHeader";
 import StatusBadge from "@/components/StatusBadge";
 import { prisma } from "@/lib/db";
 import { formatDate, formatDateTime } from "@/lib/format";
+import { isServiceSlug } from "@/lib/constants";
+import { fmt } from "@/lib/i18n";
+import { getI18n } from "@/lib/i18n.server";
 
-// Публичное отслеживание заявки по номеру. Показываем только безопасные поля,
-// без внутренних заметок и контактов исполнителя.
+// Публичное отслеживание заявки по номеру. Показываем только безопасные поля.
 export default async function TrackPage({
   searchParams,
 }: {
   searchParams: Promise<{ id?: string }>;
 }) {
+  const { t } = await getI18n();
   const { id } = await searchParams;
   const numericId = id ? Number(id) : NaN;
 
@@ -19,33 +22,35 @@ export default async function TrackPage({
       ? await prisma.request.findUnique({ where: { id: numericId } })
       : null;
 
+  const serviceLabel = request
+    ? isServiceSlug(request.serviceType)
+      ? t.services[request.serviceType].title
+      : request.serviceType
+    : "";
+
   return (
     <div className="min-h-screen">
       <SiteHeader />
       <main className="mx-auto max-w-lg px-4 py-10">
-        <h1 className="mb-1 text-2xl font-bold text-gray-900">
-          Отследить заявку
-        </h1>
-        <p className="mb-6 text-sm text-gray-600">
-          Введите номер заявки, который вы получили после отправки.
-        </p>
+        <h1 className="mb-1 text-2xl font-bold text-gray-900">{t.track.title}</h1>
+        <p className="mb-6 text-sm text-gray-600">{t.track.subtitle}</p>
 
         <form method="get" className="card flex gap-2 p-4">
           <input
             name="id"
             defaultValue={id ?? ""}
-            placeholder="Например: 3"
+            placeholder={t.track.placeholder}
             className="input"
             inputMode="numeric"
           />
           <button type="submit" className="btn-primary whitespace-nowrap">
-            Проверить
+            {t.track.check}
           </button>
         </form>
 
         {id && !request && (
           <div className="mt-6 rounded-lg bg-amber-50 px-4 py-3 text-sm text-amber-800">
-            Заявка № {id} не найдена. Проверьте номер.
+            {fmt(t.track.notFound, { id })}
           </div>
         )}
 
@@ -53,28 +58,25 @@ export default async function TrackPage({
           <div className="card mt-6 space-y-3 p-6">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-bold text-gray-900">
-                Заявка № {request.id}
+                {fmt(t.track.requestNo, { id: request.id })}
               </h2>
               <StatusBadge status={request.status} />
             </div>
             <dl className="grid grid-cols-1 gap-2 text-sm">
-              <Row label="Услуга" value={request.serviceType} />
-              <Row label="Адрес" value={request.address} />
+              <Row label={t.track.service} value={serviceLabel} />
+              <Row label={t.track.address} value={request.address} />
               <Row
-                label="Желаемая дата"
+                label={t.track.preferredDate}
                 value={formatDate(request.preferredDate)}
               />
-              <Row
-                label="Создана"
-                value={formatDateTime(request.createdAt)}
-              />
+              <Row label={t.track.created} value={formatDateTime(request.createdAt)} />
             </dl>
           </div>
         )}
 
         <div className="mt-6">
           <Link href="/" className="text-sm text-gray-500 hover:text-gray-700">
-            ← На главную
+            ← {t.common.backHome}
           </Link>
         </div>
       </main>

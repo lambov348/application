@@ -4,17 +4,16 @@ import StatusBadge from "@/components/StatusBadge";
 import PhotoGallery from "@/components/PhotoGallery";
 import SubmitButton from "@/components/SubmitButton";
 import { formatDate, parsePhotos } from "@/lib/format";
-import {
-  TASK_STATUS_FLOW,
-  TASK_STATUS_LABELS,
-  TaskStatus,
-} from "@/lib/constants";
+import { TASK_STATUS_FLOW, TaskStatus, isServiceSlug } from "@/lib/constants";
+import { fmt } from "@/lib/i18n";
+import { getI18n } from "@/lib/i18n.server";
 import { updateTask } from "./actions";
 
 // Кабинет исполнителя: ТОЛЬКО назначенные ему задачи.
 // Запрос жёстко фильтруется по workerId — чужие задачи не попадают в выборку.
 export default async function WorkerDashboard() {
   const worker = await requireWorker();
+  const { t } = await getI18n();
 
   const tasks = await prisma.task.findMany({
     where: { workerId: worker.id },
@@ -22,21 +21,21 @@ export default async function WorkerDashboard() {
     include: { request: true },
   });
 
-  const openCount = tasks.filter((t) => t.status !== "done").length;
+  const openCount = tasks.filter((tk) => tk.status !== "done").length;
+  const svc = (slug: string) =>
+    isServiceSlug(slug) ? t.services[slug].title : slug;
 
   return (
     <div className="space-y-5">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Мои задачи</h1>
+        <h1 className="text-2xl font-bold text-gray-900">{t.worker.title}</h1>
         <p className="text-sm text-gray-600">
-          Активных задач: {openCount} из {tasks.length}
+          {fmt(t.worker.activeOf, { open: openCount, total: tasks.length })}
         </p>
       </div>
 
       {tasks.length === 0 && (
-        <div className="card p-10 text-center text-gray-400">
-          Вам пока не назначено ни одной задачи.
-        </div>
+        <div className="card p-10 text-center text-gray-400">{t.worker.empty}</div>
       )}
 
       {tasks.map((task) => {
@@ -46,23 +45,20 @@ export default async function WorkerDashboard() {
           <div key={task.id} className="card p-6">
             <div className="mb-3 flex items-center justify-between">
               <h2 className="font-bold text-gray-900">
-                Заявка № {task.request.id} · {task.request.serviceType}
+                {fmt(t.worker.requestNo, { id: task.request.id })} · {svc(task.request.serviceType)}
               </h2>
               <StatusBadge status={task.request.status} />
             </div>
 
             <dl className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
-              <Field label="Клиент" value={task.request.clientName} />
-              <Field label="Контакт" value={task.request.clientContact} />
-              <Field label="Адрес" value={task.request.address} />
-              <Field
-                label="Желаемая дата"
-                value={formatDate(task.request.preferredDate)}
-              />
+              <Field label={t.worker.fClient} value={task.request.clientName} />
+              <Field label={t.worker.fContact} value={task.request.clientContact} />
+              <Field label={t.worker.fAddress} value={task.request.address} />
+              <Field label={t.worker.fPreferredDate} value={formatDate(task.request.preferredDate)} />
             </dl>
 
             <div className="mt-3">
-              <p className="label">Описание задачи</p>
+              <p className="label">{t.worker.description}</p>
               <p className="whitespace-pre-wrap text-sm text-gray-800">
                 {task.request.description}
               </p>
@@ -70,42 +66,35 @@ export default async function WorkerDashboard() {
 
             {clientPhotos.length > 0 && (
               <div className="mt-3">
-                <p className="label">Фото от клиента</p>
-                <PhotoGallery photos={clientPhotos} />
+                <p className="label">{t.worker.clientPhotos}</p>
+                <PhotoGallery photos={clientPhotos} alt={t.common.photo} />
               </div>
             )}
 
             {resultPhotos.length > 0 && (
               <div className="mt-3">
-                <p className="label">Загруженные фото результата</p>
-                <PhotoGallery photos={resultPhotos} />
+                <p className="label">{t.worker.uploadedResults}</p>
+                <PhotoGallery photos={resultPhotos} alt={t.common.photo} />
               </div>
             )}
 
             {/* Обновление задачи */}
-            <form
-              action={updateTask}
-              className="mt-4 space-y-3 border-t border-gray-100 pt-4"
-            >
+            <form action={updateTask} className="mt-4 space-y-3 border-t border-gray-100 pt-4">
               <input type="hidden" name="taskId" value={task.id} />
 
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div>
-                  <label className="label">Статус</label>
-                  <select
-                    name="status"
-                    className="input"
-                    defaultValue={task.status}
-                  >
+                  <label className="label">{t.worker.statusLabel}</label>
+                  <select name="status" className="input" defaultValue={task.status}>
                     {TASK_STATUS_FLOW.map((s: TaskStatus) => (
                       <option key={s} value={s}>
-                        {TASK_STATUS_LABELS[s]}
+                        {t.taskStatus[s]}
                       </option>
                     ))}
                   </select>
                 </div>
                 <div>
-                  <label className="label">Фото результата</label>
+                  <label className="label">{t.worker.resultPhotosLabel}</label>
                   <input
                     name="resultPhotos"
                     type="file"
@@ -117,21 +106,21 @@ export default async function WorkerDashboard() {
               </div>
 
               <div>
-                <label className="label">Комментарий</label>
+                <label className="label">{t.worker.commentLabel}</label>
                 <textarea
                   name="comment"
                   className="input min-h-[70px]"
-                  placeholder="Комментарий по задаче (по желанию)"
+                  placeholder={t.worker.commentPlaceholder}
                   defaultValue=""
                 />
                 {task.workerComment && (
                   <p className="mt-1 text-xs text-gray-400">
-                    Текущий комментарий: {task.workerComment}
+                    {fmt(t.worker.currentComment, { comment: task.workerComment })}
                   </p>
                 )}
               </div>
 
-              <SubmitButton className="btn-primary">Сохранить</SubmitButton>
+              <SubmitButton className="btn-primary">{t.worker.save}</SubmitButton>
             </form>
           </div>
         );

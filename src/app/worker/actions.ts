@@ -5,11 +5,7 @@ import { prisma } from "@/lib/db";
 import { requireWorker } from "@/lib/auth";
 import { saveUploadedFiles } from "@/lib/uploads";
 import { parsePhotos } from "@/lib/format";
-import {
-  REQUEST_STATUS_LABELS,
-  TASK_STATUS_FLOW,
-  TaskStatus,
-} from "@/lib/constants";
+import { TASK_STATUS_FLOW, TaskStatus } from "@/lib/constants";
 
 // Статус задачи исполнителя однозначно определяет статус заявки.
 const TASK_TO_REQUEST_STATUS: Record<TaskStatus, string> = {
@@ -20,6 +16,7 @@ const TASK_TO_REQUEST_STATUS: Record<TaskStatus, string> = {
 
 // Исполнитель обновляет свою задачу: статус, комментарий, фото результата.
 // КЛЮЧЕВАЯ проверка прав: задача должна принадлежать текущему исполнителю.
+// В историю пишем коды (статус) — подпись рендерится по языку при показе.
 export async function updateTask(formData: FormData) {
   const worker = await requireWorker();
 
@@ -32,6 +29,7 @@ export async function updateTask(formData: FormData) {
   if (!task || task.workerId !== worker.id) return;
 
   const statusValid = TASK_STATUS_FLOW.includes(newStatus);
+  const statusChanged = statusValid && newStatus !== task.status;
 
   // Сохраняем фото результата (добавляем к уже существующим).
   const files = formData
@@ -50,27 +48,30 @@ export async function updateTask(formData: FormData) {
   });
 
   // Синхронизируем статус заявки и пишем историю.
-  const logNotes: string[] = [];
-  if (statusValid && newStatus !== task.status) {
+  if (statusChanged) {
     const requestStatus = TASK_TO_REQUEST_STATUS[newStatus];
     await prisma.request.update({
       where: { id: task.requestId },
       data: { status: requestStatus },
     });
-    logNotes.push(
-      `Статус изменён на «${REQUEST_STATUS_LABELS[requestStatus as keyof typeof REQUEST_STATUS_LABELS]}»`
-    );
+    await prisma.activityLog.create({
+      data: {
+        requestId: task.requestId,
+        actorId: worker.id,
+        action: "status_changed",
+        note: requestStatus,
+      },
+    });
   }
-  if (comment.length > 0) logNotes.push("Добавлен комментарий исполнителя");
-  if (newPhotos.length > 0) logNotes.push("Добавлено фото результата");
 
-  if (logNotes.length > 0) {
+  // Отдельная запись, если добавлен только комментарий/фото без смены статуса.
+  if (!statusChanged && (comment.length > 0 || newPhotos.length > 0)) {
     await prisma.activityLog.create({
       data: {
         requestId: task.requestId,
         actorId: worker.id,
         action: "worker_update",
-        note: logNotes.join("; "),
+        note: null,
       },
     });
   }

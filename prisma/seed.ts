@@ -2,11 +2,11 @@ import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
 // Заполнение базы тестовыми данными: 1 админ, 2 исполнителя, 5 заявок
-// в разных статусах — чтобы сразу увидеть работу интерфейса.
+// в разных статусах. serviceType хранится как слаг, история — как коды
+// (подписи подставляются на нужном языке при отображении).
 const prisma = new PrismaClient();
 
 async function main() {
-  // Чистим таблицы для идемпотентности seed (порядок важен из-за связей).
   await prisma.activityLog.deleteMany();
   await prisma.task.deleteMany();
   await prisma.request.deleteMany();
@@ -14,10 +14,9 @@ async function main() {
 
   const hash = (p: string) => bcrypt.hashSync(p, 10);
 
-  // Пользователи
   const admin = await prisma.user.create({
     data: {
-      name: "Администратор",
+      name: "Administrator",
       email: "admin@moebelstock24.de",
       passwordHash: hash("admin123"),
       role: "admin",
@@ -27,7 +26,7 @@ async function main() {
 
   const anna = await prisma.user.create({
     data: {
-      name: "Анна Шульц",
+      name: "Anna Schulz",
       email: "anna@moebelstock24.de",
       passwordHash: hash("worker123"),
       role: "worker",
@@ -37,7 +36,7 @@ async function main() {
 
   const boris = await prisma.user.create({
     data: {
-      name: "Борис Кляйн",
+      name: "Boris Klein",
       email: "boris@moebelstock24.de",
       passwordHash: hash("worker123"),
       role: "worker",
@@ -48,51 +47,47 @@ async function main() {
   const day = 24 * 60 * 60 * 1000;
   const soon = (days: number) => new Date(Date.now() + days * day);
 
-  // Заявка №1 — новая, без исполнителя
+  // №1 — новая, без исполнителя
   await prisma.request.create({
     data: {
-      clientName: "Пётр Иванов",
+      clientName: "Peter Ivanov",
       clientContact: "+49 151 1112233",
-      serviceType: "Сборка мебели",
-      description: "Собрать шкаф IKEA PAX (2 секции) и комод.",
+      serviceType: "assembly",
+      description: "IKEA PAX Schrank (2 Elemente) und Kommode aufbauen.",
       address: "Berlin, Alexanderplatz 1",
       preferredDate: soon(2),
       status: "new",
-      logs: { create: { action: "created", note: "Заявка создана клиентом" } },
+      logs: { create: { action: "created" } },
     },
   });
 
-  // Заявка №2 — назначена Анне
+  // №2 — назначена Анне
   const req2 = await prisma.request.create({
     data: {
-      clientName: "Мария Фишер",
+      clientName: "Maria Fischer",
       clientContact: "+49 160 2223344",
-      serviceType: "Помощь с переездом",
-      description: "Переезд студии, ~15 коробок, диван, стол. Есть лифт.",
+      serviceType: "moving",
+      description: "Umzug Studio, ~15 Kartons, Sofa, Tisch. Aufzug vorhanden.",
       address: "München, Leopoldstraße 20",
       preferredDate: soon(3),
       status: "assigned",
       task: { create: { workerId: anna.id, status: "assigned" } },
       logs: {
         create: [
-          { action: "created", note: "Заявка создана клиентом" },
-          {
-            actorId: admin.id,
-            action: "assigned",
-            note: "Назначен исполнитель: Анна Шульц",
-          },
+          { action: "created" },
+          { actorId: admin.id, action: "assigned", note: anna.name },
         ],
       },
     },
   });
 
-  // Заявка №3 — в работе у Бориса
+  // №3 — в работе у Бориса
   await prisma.request.create({
     data: {
-      clientName: "Олег Смирнов",
+      clientName: "Oleg Smirnov",
       clientContact: "+49 170 3334455",
-      serviceType: "Перевозка и доставка",
-      description: "Перевезти обеденный стол и 6 стульев в другой район.",
+      serviceType: "transport",
+      description: "Esstisch und 6 Stühle in einen anderen Bezirk transportieren.",
       address: "Hamburg, Reeperbahn 10",
       preferredDate: soon(1),
       status: "in_progress",
@@ -100,34 +95,26 @@ async function main() {
         create: {
           workerId: boris.id,
           status: "in_progress",
-          workerComment: "Выехал к клиенту, загружаю мебель.",
+          workerComment: "Unterwegs zum Kunden, lade die Möbel.",
         },
       },
       logs: {
         create: [
-          { action: "created", note: "Заявка создана клиентом" },
-          {
-            actorId: admin.id,
-            action: "assigned",
-            note: "Назначен исполнитель: Борис Кляйн",
-          },
-          {
-            actorId: boris.id,
-            action: "worker_update",
-            note: "Статус изменён на «В работе»",
-          },
+          { action: "created" },
+          { actorId: admin.id, action: "assigned", note: boris.name },
+          { actorId: boris.id, action: "status_changed", note: "in_progress" },
         ],
       },
     },
   });
 
-  // Заявка №4 — выполнена Анной
+  // №4 — выполнена Анной
   await prisma.request.create({
     data: {
-      clientName: "Елена Вагнер",
+      clientName: "Elena Wagner",
       clientContact: "+49 152 4445566",
-      serviceType: "Монтаж на стену",
-      description: "Повесить телевизор 55\" и две полки в гостиной.",
+      serviceType: "mounting",
+      description: 'TV 55" und zwei Regale im Wohnzimmer aufhängen.',
       address: "Köln, Hohe Straße 5",
       preferredDate: soon(-1),
       status: "done",
@@ -135,54 +122,42 @@ async function main() {
         create: {
           workerId: anna.id,
           status: "done",
-          workerComment: "Телевизор и полки закреплены, всё проверено.",
+          workerComment: "TV und Regale montiert, alles geprüft.",
         },
       },
       logs: {
         create: [
-          { action: "created", note: "Заявка создана клиентом" },
-          {
-            actorId: admin.id,
-            action: "assigned",
-            note: "Назначен исполнитель: Анна Шульц",
-          },
-          {
-            actorId: anna.id,
-            action: "worker_update",
-            note: "Статус изменён на «Выполнена»; Добавлен комментарий исполнителя",
-          },
+          { action: "created" },
+          { actorId: admin.id, action: "assigned", note: anna.name },
+          { actorId: anna.id, action: "status_changed", note: "done" },
         ],
       },
     },
   });
 
-  // Заявка №5 — отменена
+  // №5 — отменена
   await prisma.request.create({
     data: {
-      clientName: "Дмитрий Ковалёв",
+      clientName: "Dmitry Kowalev",
       clientContact: "+49 176 5556677",
-      serviceType: "Уборка и вынос",
-      description: "Вынести старый диван. Клиент передумал.",
+      serviceType: "cleaning",
+      description: "Altes Sofa entsorgen. Kunde hat es sich anders überlegt.",
       address: "Frankfurt, Zeil 30",
       status: "cancelled",
       logs: {
         create: [
-          { action: "created", note: "Заявка создана клиентом" },
-          {
-            actorId: admin.id,
-            action: "status_changed",
-            note: "Статус изменён на «Отменена»",
-          },
+          { action: "created" },
+          { actorId: admin.id, action: "status_changed", note: "cancelled" },
         ],
       },
     },
   });
 
-  console.log("Seed завершён:");
-  console.log(`  Админ:        ${admin.email} / admin123`);
-  console.log(`  Исполнитель:  ${anna.email} / worker123`);
-  console.log(`  Исполнитель:  ${boris.email} / worker123`);
-  console.log(`  Заявка №${req2.id} назначена, всего 5 заявок.`);
+  console.log("Seed done:");
+  console.log(`  Admin:   ${admin.email} / admin123`);
+  console.log(`  Worker:  ${anna.email} / worker123`);
+  console.log(`  Worker:  ${boris.email} / worker123`);
+  console.log(`  Request #${req2.id} assigned, 5 requests total.`);
 }
 
 main()

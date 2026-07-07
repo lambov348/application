@@ -6,7 +6,16 @@ import SubmitButton from "@/components/SubmitButton";
 
 const initialState: LoginState = {};
 
-export default function LoginForm() {
+export default function LoginForm({
+  labels,
+}: {
+  labels: {
+    email: string;
+    password: string;
+    submit: string;
+    submitting: string;
+  };
+}) {
   const [state, formAction] = useActionState(login, initialState);
 
   return (
@@ -18,7 +27,7 @@ export default function LoginForm() {
       )}
       <div>
         <label className="label" htmlFor="email">
-          Email
+          {labels.email}
         </label>
         <input
           id="email"
@@ -31,7 +40,7 @@ export default function LoginForm() {
       </div>
       <div>
         <label className="label" htmlFor="password">
-          Пароль
+          {labels.password}
         </label>
         <input
           id="password"
@@ -42,8 +51,8 @@ export default function LoginForm() {
           required
         />
       </div>
-      <SubmitButton className="btn-primary w-full" pendingText="Вход…">
-        Войти
+      <SubmitButton className="btn-primary w-full" pendingText={labels.submitting}>
+        {labels.submit}
       </SubmitButton>
     </form>
   );

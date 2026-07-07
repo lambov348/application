@@ -6,8 +6,17 @@ import SubmitButton from "@/components/SubmitButton";
 
 const initialState: WorkerFormState = {};
 
+type Labels = {
+  addTitle: string;
+  nameLabel: string;
+  emailLabel: string;
+  passwordLabel: string;
+  passwordHint: string;
+  addBtn: string;
+};
+
 // Форма добавления исполнителя. Сбрасывается после успешного создания.
-export default function WorkerForm() {
+export default function WorkerForm({ labels }: { labels: Labels }) {
   const [state, formAction] = useActionState(createWorker, initialState);
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -17,7 +26,7 @@ export default function WorkerForm() {
 
   return (
     <form ref={formRef} action={formAction} className="card space-y-3 p-6">
-      <h2 className="font-semibold text-gray-900">Добавить исполнителя</h2>
+      <h2 className="font-semibold text-gray-900">{labels.addTitle}</h2>
       {state.error && (
         <div className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
           {state.error}
@@ -30,30 +39,30 @@ export default function WorkerForm() {
       )}
       <div>
         <label className="label" htmlFor="name">
-          Имя
+          {labels.nameLabel}
         </label>
         <input id="name" name="name" className="input" required />
       </div>
       <div>
         <label className="label" htmlFor="email">
-          Email (логин)
+          {labels.emailLabel}
         </label>
         <input id="email" name="email" type="email" className="input" required />
       </div>
       <div>
         <label className="label" htmlFor="password">
-          Пароль
+          {labels.passwordLabel}
         </label>
         <input
           id="password"
           name="password"
           type="text"
           className="input"
-          placeholder="минимум 6 символов"
+          placeholder={labels.passwordHint}
           required
         />
       </div>
-      <SubmitButton className="btn-primary w-full">Добавить</SubmitButton>
+      <SubmitButton className="btn-primary w-full">{labels.addBtn}</SubmitButton>
     </form>
   );
 }

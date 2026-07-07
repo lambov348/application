@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { requireWorker } from "@/lib/auth";
+import { getI18n } from "@/lib/i18n.server";
 import LogoutButton from "@/components/LogoutButton";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 
 // Layout кабинета исполнителя. requireWorker пускает только роль worker.
 export default async function WorkerLayout({
@@ -9,6 +11,7 @@ export default async function WorkerLayout({
   children: React.ReactNode;
 }) {
   const user = await requireWorker();
+  const { locale, t } = await getI18n();
 
   return (
     <div className="min-h-screen">
@@ -18,14 +21,15 @@ export default async function WorkerLayout({
             <span className="text-xl">🛋️</span>
             <span className="font-bold text-brand">MöbelStock24</span>
             <span className="rounded bg-brand-light px-2 py-0.5 text-xs font-medium text-brand">
-              Исполнитель
+              {t.worker.badge}
             </span>
           </Link>
           <div className="flex items-center gap-3">
+            <LanguageSwitcher current={locale} />
             <span className="hidden text-sm text-gray-600 sm:inline">
               {user.name}
             </span>
-            <LogoutButton />
+            <LogoutButton label={t.common.logout} />
           </div>
         </div>
       </header>

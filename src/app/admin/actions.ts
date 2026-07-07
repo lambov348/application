@@ -3,14 +3,11 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
-import {
-  ALL_REQUEST_STATUSES,
-  REQUEST_STATUS_LABELS,
-  RequestStatus,
-} from "@/lib/constants";
+import { ALL_REQUEST_STATUSES, RequestStatus } from "@/lib/constants";
 
 // Назначить заявку исполнителю. Создаёт (или переназначает) Task
 // и переводит заявку в статус "assigned".
+// В истории храним минимальные данные (имя/код статуса) — подпись рендерится по языку.
 export async function assignRequest(formData: FormData) {
   const admin = await requireAdmin();
   const requestId = Number(formData.get("requestId"));
@@ -22,7 +19,6 @@ export async function assignRequest(formData: FormData) {
   });
   if (!worker) return;
 
-  // Task связан с заявкой один-к-одному — используем upsert для переназначения.
   await prisma.task.upsert({
     where: { requestId },
     create: { requestId, workerId, status: "assigned" },
@@ -34,11 +30,7 @@ export async function assignRequest(formData: FormData) {
     data: {
       status: "assigned",
       logs: {
-        create: {
-          actorId: admin.id,
-          action: "assigned",
-          note: `Назначен исполнитель: ${worker.name}`,
-        },
+        create: { actorId: admin.id, action: "assigned", note: worker.name },
       },
     },
   });
@@ -60,11 +52,7 @@ export async function updateRequestStatus(formData: FormData) {
     data: {
       status,
       logs: {
-        create: {
-          actorId: admin.id,
-          action: "status_changed",
-          note: `Статус изменён на «${REQUEST_STATUS_LABELS[status]}»`,
-        },
+        create: { actorId: admin.id, action: "status_changed", note: status },
       },
     },
   });
@@ -81,12 +69,7 @@ export async function addNote(formData: FormData) {
   if (!Number.isInteger(requestId) || note.length === 0) return;
 
   await prisma.activityLog.create({
-    data: {
-      requestId,
-      actorId: admin.id,
-      action: "note",
-      note,
-    },
+    data: { requestId, actorId: admin.id, action: "note", note },
   });
 
   revalidatePath(`/admin/requests/${requestId}`);

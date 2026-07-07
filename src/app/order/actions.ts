@@ -4,17 +4,8 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { saveUploadedFiles } from "@/lib/uploads";
-import { SERVICE_TYPES } from "@/lib/constants";
-
-// Схема валидации заявки клиента (проверка на сервере).
-const OrderSchema = z.object({
-  clientName: z.string().trim().min(2, "Укажите имя"),
-  clientContact: z.string().trim().min(5, "Укажите телефон или контакт"),
-  serviceType: z.string().trim().min(1, "Выберите услугу"),
-  description: z.string().trim().min(5, "Опишите задачу подробнее"),
-  address: z.string().trim().min(3, "Укажите адрес"),
-  preferredDate: z.string().trim().optional(),
-});
+import { isServiceSlug, SERVICE_SLUGS } from "@/lib/constants";
+import { getI18n } from "@/lib/i18n.server";
 
 export type OrderFormState = { error?: string };
 
@@ -23,7 +14,19 @@ export async function createOrder(
   _prev: OrderFormState,
   formData: FormData
 ): Promise<OrderFormState> {
-  const parsed = OrderSchema.safeParse({
+  const { t } = await getI18n();
+
+  // Валидация с сообщениями на текущем языке.
+  const schema = z.object({
+    clientName: z.string().trim().min(2, t.orderErrors.name),
+    clientContact: z.string().trim().min(5, t.orderErrors.contact),
+    serviceType: z.string().trim().min(1, t.orderErrors.service),
+    description: z.string().trim().min(5, t.orderErrors.description),
+    address: z.string().trim().min(3, t.orderErrors.address),
+    preferredDate: z.string().trim().optional(),
+  });
+
+  const parsed = schema.safeParse({
     clientName: formData.get("clientName"),
     clientContact: formData.get("clientContact"),
     serviceType: formData.get("serviceType"),
@@ -33,16 +36,15 @@ export async function createOrder(
   });
 
   if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? "Проверьте поля формы" };
+    return { error: parsed.error.issues[0]?.message ?? t.orderErrors.generic };
   }
   const data = parsed.data;
 
-  // Подстраховка: услуга должна быть из известного списка.
-  const serviceType = SERVICE_TYPES.includes(data.serviceType)
+  // Услуга хранится как стабильный слаг; подпись подставляется по языку.
+  const serviceType = isServiceSlug(data.serviceType)
     ? data.serviceType
-    : "Другое";
+    : SERVICE_SLUGS[0];
 
-  // Сохраняем прикреплённые фото (если есть).
   const files = formData.getAll("photos").filter((f): f is File => f instanceof File);
   const photoPaths = await saveUploadedFiles(files);
 
@@ -61,15 +63,9 @@ export async function createOrder(
       preferredDate,
       photos: JSON.stringify(photoPaths),
       status: "new",
-      logs: {
-        create: {
-          action: "created",
-          note: "Заявка создана клиентом",
-        },
-      },
+      logs: { create: { action: "created" } },
     },
   });
 
-  // redirect() бросает исключение — поэтому вне try/catch.
   redirect(`/order/success?id=${request.id}`);
 }
