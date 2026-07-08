@@ -2,7 +2,7 @@
 # Как развернуть:
 #   1. Зайдите на https://render.com и войдите через GitHub (бесплатно).
 #   2. New → Blueprint → выберите репозиторий lambov348/application
-#      и ветку claude/request-management-app-t5lxhh.
+#      и ветку claude/mobelstock24-crm-xxmmjm.
 #   3. Render прочитает этот файл, нажмите Apply — через пару минут
 #      появится публичный URL вида https://moebelstock24.onrender.com
 #
@@ -17,7 +17,7 @@ services:
     name: moebelstock24
     runtime: node
     plan: free
-    branch: claude/request-management-app-t5lxhh
+    branch: claude/mobelstock24-crm-xxmmjm
     buildCommand: npm install --include=dev && npx prisma generate && npm run build
     startCommand: npx prisma db push --skip-generate && npm run db:seed && npm run start
     envVars:

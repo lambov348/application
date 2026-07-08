@@ -26,8 +26,9 @@ export async function middleware(req: NextRequest) {
 
   const wantsAdmin = pathname.startsWith("/admin");
   const wantsWorker = pathname.startsWith("/worker");
+  const wantsCrm = pathname.startsWith("/crm");
 
-  if ((wantsAdmin || wantsWorker) && !role) {
+  if ((wantsAdmin || wantsWorker || wantsCrm) && !role) {
     const url = new URL("/login", req.url);
     url.searchParams.set("next", pathname);
     return NextResponse.redirect(url);
@@ -38,10 +39,11 @@ export async function middleware(req: NextRequest) {
   if (wantsWorker && role !== "worker") {
     return NextResponse.redirect(new URL("/admin", req.url));
   }
+  // CRM доступна и админу, и работнику — достаточно быть авторизованным.
 
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ["/admin/:path*", "/worker/:path*"],
+  matcher: ["/admin/:path*", "/worker/:path*", "/crm/:path*"],
 };

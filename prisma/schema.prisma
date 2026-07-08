@@ -23,6 +23,9 @@ model User {
   createdAt    DateTime      @default(now())
   tasks        Task[]
   logs         ActivityLog[]
+  ownedDeals   Deal[]        @relation("DealOwner")
+  crmTasks     CrmTask[]
+  crmComments  DealComment[]
 }
 
 // Заявка клиента. Числовой id служит человекочитаемым номером заявки (№ 1, 2, ...).
@@ -66,4 +69,89 @@ model ActivityLog {
   action    String // краткий код действия
   note      String? // человекочитаемое описание
   createdAt DateTime @default(now())
+}
+
+// ─────────────────────────────────────────────────────────────
+// CRM (amoCRM-стиль): Клиенты, Сделки (воронка), Комментарии, Задачи.
+// ─────────────────────────────────────────────────────────────
+
+// Карточка клиента. Простая: контакты, адрес, язык, источник.
+model Contact {
+  id        String   @id @default(cuid())
+  name      String
+  phone     String?
+  whatsapp  String?
+  email     String?
+  address   String? // адрес объекта
+  language  String? // DE | EN | RU | RO
+  source    String? // whatsapp | site | google | tiktok | instagram | kleinanzeigen | myhammer | referral | other
+  comment   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deals     Deal[]
+}
+
+// Сделка = карточка в воронке. Числовой id — человекочитаемый номер (№ 1, 2, …).
+model Deal {
+  id            Int       @id @default(autoincrement())
+  title         String
+  pipeline      String    @default("moebelstock24") // moebelstock24 | reinigung | renovierung
+  stage         String    @default("new") // ключ этапа воронки
+  contactId     String?
+  contact       Contact?  @relation(fields: [contactId], references: [id], onDelete: SetNull)
+  serviceType   String? // kitchen | wardrobe | bed | dresser | moving | dismantle | transport | disposal | other
+  description   String? // задача + метраж/фото/что входит в цену
+  workAddress   String? // адрес работы (если отличается от адреса клиента)
+  desiredDate   DateTime? // желаемая дата
+  scheduledAt   DateTime? // согласованная дата и время монтажа
+  amount        Float? // сумма Angebot
+  amountType    String? // netto | brutto
+  paymentMethod String? // ueberweisung | bar | karte | rechnung
+  team          String? // team1 | team2 | other
+  parking       String? // yes | no | unclear
+  floor         String? // этаж (EG, 3. OG …)
+  hasLift       Boolean   @default(false)
+  needDismantle Boolean   @default(false)
+  needWaste     Boolean   @default(false)
+  needConnect   Boolean   @default(false)
+  paymentStatus String    @default("unpaid") // unpaid | partial | paid
+  warranty1y    Boolean   @default(true)
+  ownerId       String?
+  owner         User?     @relation("DealOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+  photos        String    @default("[]") // JSON-массив путей к фото/файлам от клиента
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  comments DealComment[]
+  crmTasks CrmTask[]
+
+  @@index([pipeline, stage])
+}
+
+// История общения по сделке: заметки, вставленные сообщения WhatsApp, звонки, системные записи.
+model DealComment {
+  id        Int      @id @default(autoincrement())
+  dealId    Int
+  deal      Deal     @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  authorId  String?
+  author    User?    @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  channel   String   @default("note") // note | whatsapp | call | system
+  body      String
+  createdAt DateTime @default(now())
+}
+
+// Задачи и напоминания (позвонить, отправить Angebot, напомнить о парковке …).
+model CrmTask {
+  id         String    @id @default(cuid())
+  dealId     Int?
+  deal       Deal?     @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  title      String
+  kind       String    @default("todo") // call | offer | photo | address | confirm | parking | payment | review | followup | todo
+  dueAt      DateTime?
+  done       Boolean   @default(false)
+  assigneeId String?
+  assignee   User?     @relation(fields: [assigneeId], references: [id], onDelete: SetNull)
+  createdAt  DateTime  @default(now())
+
+  @@index([done, dueAt])
 }

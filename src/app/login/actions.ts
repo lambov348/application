@@ -34,5 +34,6 @@ export async function login(
     role: user.role === "admin" ? "admin" : "worker",
   });
 
-  redirect(user.role === "admin" ? "/admin" : "/worker");
+  // Админ работает в CRM (воронка). Работник — в своём кабинете.
+  redirect(user.role === "admin" ? "/crm" : "/worker");
 }
