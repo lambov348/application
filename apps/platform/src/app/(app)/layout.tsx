@@ -18,6 +18,7 @@ export default async function AppLayout({
   const titles: Record<string, string> = {
     heute: t("heute"),
     kunden: t("kunden"),
+    anfragen: t("anfragen"),
     einstellungen: t("benutzer"),
   };
 

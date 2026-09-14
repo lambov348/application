@@ -21,7 +21,7 @@ type NavItem = {
 
 const NAV: NavItem[] = [
   { href: "/heute", icon: "◧", labelKey: "heute", roles: ["INHABER", "DISPONENT"] },
-  { href: "/anfragen", icon: "▤", labelKey: "anfragen", roles: ["INHABER", "DISPONENT"], upcoming: true },
+  { href: "/anfragen", icon: "▤", labelKey: "anfragen", roles: ["INHABER", "DISPONENT"] },
   { href: "/einsatzplan", icon: "▦", labelKey: "einsatzplan", roles: ["INHABER", "DISPONENT"], upcoming: true },
   { href: "/angebote", icon: "€", labelKey: "angebote", roles: ["INHABER", "DISPONENT"], upcoming: true },
   { href: "/kunden", icon: "☷", labelKey: "kunden", roles: ["INHABER", "DISPONENT"] },

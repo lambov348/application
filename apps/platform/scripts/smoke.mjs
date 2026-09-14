@@ -23,6 +23,7 @@
  * по нему проходила бы всегда. Поэтому здесь везде innerText.
  */
 import { chromium } from "playwright";
+import { generateSync } from "otplib";
 
 const BASE = process.env.SMOKE_URL ?? "http://127.0.0.1:3000";
 const CHROME = process.env.SMOKE_CHROMIUM; // путь к Chromium, если он не стандартный
@@ -59,6 +60,30 @@ function credentials(varName) {
 
 const monteur = credentials("SMOKE_MONTEUR");
 const disponent = credentials("SMOKE_DISPONENT");
+
+/**
+ * Владелец: email:пароль:секрет2FA. Секрет в формате base32 — тот самый, что
+ * показывается при настройке второго фактора. Нужен, чтобы проверить
+ * правило «цену ставит только владелец» с обеих сторон.
+ */
+function ownerCredentials() {
+  const raw = process.env.SMOKE_INHABER;
+  if (!raw) return null;
+  const parts = raw.split(":");
+  if (parts.length < 3) {
+    console.error("  SMOKE_INHABER должна быть вида email:пароль:секрет2FA");
+    return null;
+  }
+  return {
+    email: parts[0],
+    password: parts.slice(1, -1).join(":"),
+    totpSecret: parts[parts.length - 1],
+  };
+}
+const inhaber = ownerCredentials();
+
+const totpNow = (secret) =>
+  generateSync({ secret, strategy: "totp", epoch: Math.floor(Date.now() / 1000) });
 
 const browser = await chromium.launch(
   CHROME ? { executablePath: CHROME } : undefined,
@@ -303,8 +328,126 @@ if (!monteur) {
   await ctx.close();
 }
 
-// ── 8. Скорость ─────────────────────────────────────────────────────────────
-console.log("\n8. Скорость");
+// ── 8. Заявки: правила главы 9 и правило цены ───────────────────────────────
+console.log("\n8. Заявки и правило цены");
+if (!disponent || !inhaber) {
+  skip("правила заявок", "нужны SMOKE_DISPONENT и SMOKE_INHABER");
+} else {
+  // ── Диспетчер заводит клиента и заявку ──────────────────────────────────
+  const dispCtx = await browser.newContext();
+  const page = await dispCtx.newPage();
+  await page.goto(`${BASE}/login`, { waitUntil: "networkidle" });
+  await page.fill("#email", disponent.email);
+  await page.fill("#password", disponent.password);
+  await submitOf(page, "#email").click();
+  await settle(page, 3500);
+
+  const marker = `Deal${Date.now().toString().slice(-6)}`;
+  await page.goto(`${BASE}/kunden/neu`, { waitUntil: "networkidle" });
+  await page.fill("#lastName", marker);
+  await page.fill("#phone", "030 12345678");
+  await submitOf(page, "#lastName").click();
+  await settle(page, 3500);
+
+  await page.goto(`${BASE}/anfragen/neu`, { waitUntil: "networkidle" });
+  await page.selectOption("#customerId", { label: marker });
+  await page.fill("#title", `${marker} Küchenmontage`);
+  await page.selectOption("#source", "GOOGLE_ADS");
+  await submitOf(page, "#title").click();
+  await settle(page, 3500);
+  check("заявка создана", /\/anfragen\/[a-z0-9]+$/.test(page.url()), `(${page.url()})`);
+  const dealUrl = page.url();
+
+  // ── Правило 9.7: Verloren без причины ───────────────────────────────────
+  await page.selectOption('select[name="status"]', "VERLOREN");
+  await page.locator('form:has(select[name="status"]) button[type="submit"]').click();
+  await settle(page, 2500);
+  const lostText = await visibleText(page);
+  check(
+    "правило 9.7: без причины в «Verloren» не пускает",
+    lostText.includes("Grund angegeben") || (await page.locator('select[name="lostReason"]').count()) > 0,
+  );
+
+  // С причиной — проходит.
+  await page.selectOption('select[name="status"]', "VERLOREN");
+  await page.selectOption('select[name="lostReason"]', "ZU_TEUER");
+  await page.locator('form:has(select[name="status"]) button[type="submit"]').click();
+  await settle(page, 2500);
+  check("правило 9.7: с причиной переводит", (await visibleText(page)).includes("verloren"));
+
+  // Возврат в работу стирает причину.
+  await page.selectOption('select[name="status"]', "NEU");
+  await page.locator('form:has(select[name="status"]) button[type="submit"]').click();
+  await settle(page, 2500);
+  check(
+    "возврат в работу стирает причину проигрыша",
+    !(await visibleText(page)).includes("Zu teuer"),
+  );
+
+  // ── Правило 9.3: Termin без адреса ──────────────────────────────────────
+  await page.selectOption('select[name="status"]', "TERMIN_GEPLANT");
+  await page.locator('form:has(select[name="status"]) button[type="submit"]').click();
+  await settle(page, 2500);
+  check(
+    "правило 9.3: без адреса Termin не ставится",
+    (await visibleText(page)).includes("Ohne Adresse"),
+  );
+
+  // ── Правило 9.4: Ausgeführt без приёмки ─────────────────────────────────
+  await page.selectOption('select[name="status"]', "AUSGEFUEHRT");
+  await page.locator('form:has(select[name="status"]) button[type="submit"]').click();
+  await settle(page, 2500);
+  check(
+    "правило 9.4: без приёмки заказ не закрыть",
+    (await visibleText(page)).includes("Termin") ||
+      (await visibleText(page)).includes("Abnahmeprotokoll"),
+  );
+
+  // ── Правило цены: диспетчеру поля нет ───────────────────────────────────
+  const dispText = await visibleText(page);
+  check("диспетчеру поле цены не показано", !dispText.includes("Preis speichern"));
+  check("диспетчеру видна пометка о правиле", dispText.includes("Inhaber"));
+  await dispCtx.close();
+
+  // ── Владелец ставит цену ────────────────────────────────────────────────
+  const ownCtx = await browser.newContext();
+  const own = await ownCtx.newPage();
+  await own.goto(`${BASE}/login`, { waitUntil: "networkidle" });
+  await own.fill("#email", inhaber.email);
+  await own.fill("#password", inhaber.password);
+  await submitOf(own, "#email").click();
+  await settle(own, 2500);
+  await own.fill("#password", inhaber.password);
+  await own.fill("#totp", totpNow(inhaber.totpSecret));
+  await submitOf(own, "#totp").click();
+  await settle(own, 3500);
+  check("владелец вошёл", own.url().endsWith("/heute"), `(${own.url()})`);
+
+  await own.goto(dealUrl, { waitUntil: "networkidle" });
+  check("владельцу поле цены показано", (await own.locator("#priceNet").count()) === 1);
+
+  await own.fill("#priceNet", "1.234,56");
+  await own.locator('form:has(#priceNet) button[type="submit"]').click();
+  await settle(own, 3000);
+  const priced = await visibleText(own);
+  check("цена сохранена", priced.includes("1.234,56"));
+  check("цена помечена как подтверждённая владельцем", priced.includes("freigegeben"));
+
+  // НДС считается от нетто: 1234,56 × 19 % = 234,57, брутто 1469,13.
+  check("НДС посчитан верно", priced.includes("234,57"), "(19 % от 1.234,56)");
+  check("брутто посчитано верно", priced.includes("1.469,13"));
+
+  // Изменение цены попало в журнал.
+  // innerText учитывает CSS text-transform, поэтому сравниваем без регистра.
+  check(
+    "изменение цены записано в журнал",
+    priced.toLowerCase().includes("preis geändert"),
+  );
+  await ownCtx.close();
+}
+
+// ── 9. Скорость ─────────────────────────────────────────────────────────────
+console.log("\n9. Скорость");
 {
   const times = [];
   for (let i = 0; i < 10; i++) {
