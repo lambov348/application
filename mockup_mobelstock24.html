@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MöbelStock24 — Plattform, Entwurf</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Semi+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --stahl:#1E2326;
+  --stahl-2:#2A3034;
+  --beton:#EAEAE4;
+  --blatt:#FFFFFF;
+  --linie:#D4D4CB;
+  --linie-2:#E4E4DC;
+  --text:#1E2326;
+  --text-2:#646C6F;
+  --blau:#1A4F7A;
+  --gelb:#F0B429;
+  --gruen:#2D6A4F;
+  --rot:#A63A2B;
+  --r:3px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:'Barlow',system-ui,sans-serif;
+  background:var(--beton);color:var(--text);
+  font-size:14px;line-height:1.45;
+  font-variant-numeric:tabular-nums;
+  -webkit-font-smoothing:antialiased;
+}
+.cond{font-family:'Barlow Semi Condensed','Barlow',sans-serif}
+
+/* ---------- Rahmen ---------- */
+.app{display:flex;min-height:100vh}
+
+/* ---------- Seitenleiste ---------- */
+.rail{
+  width:198px;flex:0 0 198px;background:var(--stahl);color:#C6CCCE;
+  display:flex;flex-direction:column;position:sticky;top:0;height:100vh;
+}
+.brand{padding:18px 16px 16px;border-bottom:1px solid #343B3F}
+.brand b{display:block;color:#fff;font-size:17px;letter-spacing:-.2px}
+.brand span{display:none}
+.brand small{color:#7D878B;font-size:12px}
+.nav{padding:10px 8px;flex:1;overflow:auto}
+.nav button{
+  width:100%;text-align:left;background:none;border:0;color:#C6CCCE;
+  font:inherit;padding:8px 10px;border-radius:var(--r);cursor:pointer;
+  display:flex;align-items:center;gap:9px;margin-bottom:1px;
+}
+.nav button:hover{background:#2A3034;color:#fff}
+.nav button[aria-selected="true"]{background:#fff;color:var(--stahl);font-weight:600}
+.nav .ic{width:17px;text-align:center;opacity:.9;font-size:14px}
+.nav .cnt{margin-left:auto;background:var(--rot);color:#fff;font-size:11px;
+  padding:0 5px;border-radius:8px;font-weight:600}
+.nav-sep{color:#6B7478;font-size:11px;padding:14px 10px 5px;letter-spacing:.3px}
+.me{padding:12px 16px;border-top:1px solid #343B3F;display:flex;align-items:center;gap:9px}
+.me .av{width:27px;height:27px;border-radius:50%;background:var(--gelb);color:#1E2326;
+  display:grid;place-items:center;font-weight:700;font-size:12px}
+.me div b{display:block;color:#fff;font-size:13px;font-weight:600}
+.me div small{color:#7D878B;font-size:11px}
+
+/* ---------- Kopfzeile ---------- */
+.main{flex:1;min-width:0;display:flex;flex-direction:column}
+.top{
+  background:var(--blatt);border-bottom:1px solid var(--linie);
+  padding:0 22px;height:54px;display:flex;align-items:center;gap:16px;
+  position:sticky;top:0;z-index:5;
+}
+.top h1{font-size:19px;font-weight:600;letter-spacing:-.2px}
+.top .datum{color:var(--text-2);font-size:13px;border-left:1px solid var(--linie);padding-left:16px}
+.search{
+  margin-left:auto;background:var(--beton);border:1px solid var(--linie);
+  border-radius:var(--r);padding:6px 11px;color:var(--text-2);width:230px;font-size:13px}
+.btn{
+  background:var(--blau);color:#fff;border:0;border-radius:var(--r);
+  padding:8px 14px;font:inherit;font-weight:600;cursor:pointer}
+.btn.ghost{background:none;color:var(--blau);border:1px solid var(--linie)}
+.btn.sm{padding:5px 10px;font-size:13px}
+.wrap{padding:22px;flex:1}
+
+/* ---------- Kacheln ---------- */
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--linie);
+  border:1px solid var(--linie);border-radius:var(--r);overflow:hidden;margin-bottom:22px}
+.kpi{background:var(--blatt);padding:14px 16px}
+.kpi .lab{color:var(--text-2);font-size:12.5px;margin-bottom:3px}
+.kpi .val{font-size:27px;font-weight:700;letter-spacing:-.5px;line-height:1.1}
+.kpi .sub{font-size:12.5px;color:var(--text-2);margin-top:2px}
+.kpi.warn .val{color:var(--rot)}
+.kpi.good .val{color:var(--gruen)}
+
+.cols{display:grid;grid-template-columns:1.35fr 1fr;gap:22px;align-items:start}
+.panel{background:var(--blatt);border:1px solid var(--linie);border-radius:var(--r)}
+.panel h2{font-size:14px;font-weight:600;padding:11px 16px;border-bottom:1px solid var(--linie-2);
+  display:flex;align-items:center;gap:8px}
+.panel h2 .mini{margin-left:auto;font-weight:400;color:var(--text-2);font-size:12.5px}
+
+/* ---------- Einsatzliste heute ---------- */
+.job{display:flex;gap:14px;padding:13px 16px;border-bottom:1px solid var(--linie-2)}
+.job:last-child{border-bottom:0}
+.job .zeit{width:44px;flex:0 0 44px;font-weight:700;font-size:15px}
+.job .zeit small{display:block;font-weight:400;color:var(--text-2);font-size:11.5px}
+.job .body{flex:1;min-width:0}
+.job .body b{font-weight:600}
+.job .body .adr{color:var(--text-2);font-size:13px}
+.job .crew{font-size:12.5px;color:var(--text-2);margin-top:3px}
+.status{display:inline-block;font-size:11.5px;font-weight:600;padding:2px 7px;border-radius:2px;white-space:nowrap}
+.s-arbeit{background:#E8F0E9;color:var(--gruen)}
+.s-weg{background:#FDF2DA;color:#8A6100}
+.s-plan{background:#E9EDF1;color:var(--blau)}
+.s-fertig{background:var(--beton);color:var(--text-2)}
+
+/* ---------- Posteingang ---------- */
+.msg{display:flex;gap:11px;padding:12px 16px;border-bottom:1px solid var(--linie-2);cursor:pointer}
+.msg:last-child{border-bottom:0}
+.msg:hover{background:#FAFAF7}
+.msg.neu{border-left:3px solid var(--rot);padding-left:13px}
+.ch{width:23px;height:23px;flex:0 0 23px;border-radius:3px;display:grid;place-items:center;
+  font-size:11px;font-weight:700;color:#fff}
+.ch.wa{background:#1E8E5A}.ch.ig{background:#B5308A}.ch.web{background:var(--blau)}
+.ch.mail{background:#5A6468}.ch.tel{background:#7A5C1E}.ch.kl{background:#3D6B2E}
+.msg .txt{flex:1;min-width:0}
+.msg .txt b{font-weight:600}
+.msg .txt p{color:var(--text-2);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.msg .alt{font-size:12px;color:var(--text-2);text-align:right;white-space:nowrap}
+.msg .alt.spaet{color:var(--rot);font-weight:600}
+
+/* ---------- Kanban ---------- */
+.board{display:flex;gap:12px;overflow-x:auto;padding-bottom:8px}
+.spalte{flex:0 0 236px;background:#E2E2DB;border-radius:var(--r);padding:9px}
+.spalte h3{font-size:12.5px;font-weight:700;padding:1px 4px 9px;display:flex;gap:7px;align-items:center}
+.spalte h3 i{width:7px;height:7px;border-radius:50%;background:var(--blau);font-style:normal}
+.spalte h3 span{margin-left:auto;color:var(--text-2);font-weight:600}
+.karte{background:var(--blatt);border:1px solid var(--linie);border-radius:var(--r);
+  padding:10px 11px;margin-bottom:7px}
+.karte b{display:block;font-weight:600;margin-bottom:2px}
+.karte .meta{font-size:12.5px;color:var(--text-2)}
+.karte .fuss{display:flex;align-items:center;gap:6px;margin-top:8px;font-size:12.5px}
+.preis{font-weight:700}
+.preis.offen{color:var(--rot);font-weight:600}
+.tag{font-size:11px;padding:1px 6px;border-radius:2px;background:var(--beton);color:var(--text-2)}
+.tag.wa{background:#E4F1EA;color:#1E6B47}
+.tag.ig{background:#F6E6F1;color:#8E2670}
+.tag.web{background:#E9EDF1;color:var(--blau)}
+.tag.kl{background:#E9EFE5;color:#3D6B2E}
+
+/* ---------- Einsatzplan ---------- */
+.plan{background:var(--blatt);border:1px solid var(--linie);border-radius:var(--r);overflow:hidden}
+.plan-kopf{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid var(--linie)}
+.plan-kopf b{font-size:14px}
+.gitter{overflow-x:auto}
+.gitter table{border-collapse:collapse;width:100%;min-width:880px}
+.gitter th{font-size:12px;font-weight:600;color:var(--text-2);padding:7px 0;
+  border-bottom:1px solid var(--linie);text-align:left}
+.gitter th:first-child{width:104px;padding-left:16px}
+.gitter td{border-bottom:1px solid var(--linie-2);border-left:1px dotted var(--linie);
+  height:60px;vertical-align:top;padding:4px;position:relative}
+.gitter td:first-child{border-left:0;padding:10px 16px;vertical-align:middle;
+  background:#FAFAF7;font-weight:600}
+.gitter td:first-child small{display:block;font-weight:400;color:var(--text-2);font-size:12px}
+.blk{border-radius:2px;padding:5px 7px;font-size:12.5px;line-height:1.3;height:100%;
+  border-left:3px solid}
+.blk b{display:block;font-weight:600}
+.blk small{color:var(--text-2);font-size:11.5px}
+.b-kueche{background:#E9EDF1;border-color:var(--blau)}
+.b-moebel{background:#E8F0E9;border-color:var(--gruen)}
+.b-transport{background:#FDF2DA;border-color:var(--gelb)}
+.b-frei{background:repeating-linear-gradient(45deg,#F4F4EF,#F4F4EF 6px,#EAEAE4 6px,#EAEAE4 12px);
+  border-color:var(--linie);color:var(--text-2);display:grid;place-items:center;font-size:12px}
+.konflikt{background:#F7E6E2;border-color:var(--rot)}
+.konflikt b{color:var(--rot)}
+
+/* ---------- Monteur ---------- */
+.phones{display:flex;gap:26px;flex-wrap:wrap;align-items:flex-start}
+.phone{width:308px;background:var(--stahl);border-radius:22px;padding:9px}
+.screen{background:var(--beton);border-radius:15px;overflow:hidden;min-height:560px;
+  display:flex;flex-direction:column}
+.p-top{background:var(--stahl);color:#fff;padding:13px 15px}
+.p-top b{font-size:15px}
+.p-top small{display:block;color:#9BA4A8;font-size:12px}
+.p-body{padding:13px;flex:1}
+.p-card{background:var(--blatt);border:1px solid var(--linie);border-radius:var(--r);
+  padding:12px;margin-bottom:10px}
+.p-card .kopf{display:flex;align-items:baseline;gap:8px}
+.p-card .kopf b{font-size:15px;font-weight:700}
+.p-card .adr{color:var(--text-2);font-size:13px;margin:3px 0 8px}
+.p-card ul{list-style:none;font-size:13px;margin:6px 0 0}
+.p-card ul li{padding:2px 0 2px 16px;position:relative;color:var(--text-2)}
+.p-card ul li::before{content:"–";position:absolute;left:2px}
+.hinweis{background:#FDF2DA;border-left:3px solid var(--gelb);padding:7px 9px;
+  font-size:12.5px;margin-top:9px;border-radius:0 2px 2px 0}
+.p-btns{display:flex;gap:7px;margin-top:11px}
+.p-btns button{flex:1;font:inherit;font-size:13px;font-weight:600;padding:9px 0;
+  border:1px solid var(--linie);background:var(--blatt);border-radius:var(--r);cursor:pointer}
+.p-btns button.an{background:var(--gruen);border-color:var(--gruen);color:#fff}
+.foto-reihe{display:flex;gap:7px;margin-top:9px}
+.foto{flex:1;aspect-ratio:1;border:1px dashed var(--linie);border-radius:2px;
+  display:grid;place-items:center;color:var(--text-2);font-size:11.5px;background:#FAFAF7}
+.foto.voll{border-style:solid;background:#DDE3E6;color:var(--blau);font-weight:600}
+.sig{border:1px solid var(--linie);border-radius:2px;height:68px;background:#FAFAF7;
+  display:grid;place-items:center;margin-top:7px;color:var(--text-2);font-size:12.5px}
+.sig svg{display:block}
+
+/* ---------- Angebot ---------- */
+.zwei{display:grid;grid-template-columns:1fr 1fr;gap:22px;align-items:start}
+.feld{padding:10px 16px;border-bottom:1px solid var(--linie-2);display:flex;gap:12px;align-items:center}
+.feld:last-child{border-bottom:0}
+.feld .lab{width:132px;flex:0 0 132px;color:var(--text-2);font-size:13px}
+.feld .ein{flex:1;background:var(--beton);border:1px solid var(--linie);
+  border-radius:var(--r);padding:6px 10px;font-size:13.5px}
+.feld .ein.gesperrt{background:#F3E9E6;border-color:#DCC3BC;color:var(--rot);
+  display:flex;align-items:center;gap:7px}
+.vorschau{background:#FAFAF7;border:1px solid var(--linie);border-radius:var(--r);
+  padding:15px;font-size:13px;line-height:1.6;white-space:pre-wrap;
+  max-height:470px;overflow:auto}
+.hint{font-size:12.5px;color:var(--text-2);padding:10px 16px;border-top:1px solid var(--linie-2)}
+
+.tabs{display:none}
+[hidden]{display:none !important}
+@media(max-width:900px){
+  .rail{width:56px;flex:0 0 56px}
+  .brand b{font-size:0}.brand b::first-letter{font-size:17px}.brand small{display:none}
+  .nav button span.lbl{display:none}
+  .nav .cnt{display:none}.nav-sep{font-size:0;padding:8px}
+  .me div{display:none}
+  .kpis{grid-template-columns:1fr 1fr}
+  .cols,.zwei{grid-template-columns:1fr}
+  .search{display:none}
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <aside class="rail">
+    <div class="brand"><b>MöbelStock24</b><small>Berlin und Brandenburg</small></div>
+    <nav class="nav" role="tablist">
+      <button role="tab" aria-selected="true" data-t="heute"><span class="ic">◧</span><span class="lbl">Heute</span></button>
+      <button role="tab" aria-selected="false" data-t="post"><span class="ic">✉</span><span class="lbl">Posteingang</span><span class="cnt">4</span></button>
+      <button role="tab" aria-selected="false" data-t="anfragen"><span class="ic">▤</span><span class="lbl">Anfragen</span></button>
+      <button role="tab" aria-selected="false" data-t="plan"><span class="ic">▦</span><span class="lbl">Einsatzplan</span></button>
+      <button role="tab" aria-selected="false" data-t="angebot"><span class="ic">€</span><span class="lbl">Angebote</span></button>
+      <div class="nav-sep">Unterwegs</div>
+      <button role="tab" aria-selected="false" data-t="monteur"><span class="ic">▣</span><span class="lbl">Monteur-App</span></button>
+      <div class="nav-sep">Weiter</div>
+      <button disabled style="opacity:.45;cursor:default"><span class="ic">⌸</span><span class="lbl">Rechnungen</span></button>
+      <button disabled style="opacity:.45;cursor:default"><span class="ic">☷</span><span class="lbl">Kunden</span></button>
+      <button disabled style="opacity:.45;cursor:default"><span class="ic">▲</span><span class="lbl">Auswertung</span></button>
+    </nav>
+    <div class="me"><div class="av">IS</div><div><b>Ivan</b><small>Inhaber</small></div></div>
+  </aside>
+
+  <div class="main">
+
+    <!-- ══════════ HEUTE ══════════ -->
+    <section data-p="heute">
+      <header class="top">
+        <h1>Heute</h1>
+        <span class="datum">Montag, 14. September · 3 Einsätze</span>
+        <span class="search">Kunde, Adresse oder Telefon suchen</span>
+        <button class="btn">Neue Anfrage</button>
+      </header>
+      <div class="wrap">
+        <div class="kpis">
+          <div class="kpi warn"><div class="lab">Unbeantwortet</div><div class="val">4</div><div class="sub">ältestes seit 47 Minuten</div></div>
+          <div class="kpi"><div class="lab">Offene Angebote</div><div class="val">7</div><div class="sub">4 190 € im Rennen</div></div>
+          <div class="kpi good"><div class="lab">Umsatz September</div><div class="val">8 340 €</div><div class="sub">netto, 19 Aufträge</div></div>
+          <div class="kpi"><div class="lab">Nächste freie Lücke</div><div class="val">Do 16.</div><div class="sub">Team 2, ab 13:00</div></div>
+        </div>
+
+        <div class="cols">
+          <div class="panel">
+            <h2>Einsätze heute <span class="mini">Team 1 · Team 2</span></h2>
+            <div class="job">
+              <div class="zeit">08:30<small>4 Std</small></div>
+              <div class="body">
+                <b>Küche fertigstellen — Restarbeiten</b>
+                <div class="adr">Karl-Marx-Str. 112, 12043 Berlin · 2. OG, kein Aufzug</div>
+                <div class="crew">Team 1 · Ivan, Andrej — 45 €/Std je Monteur</div>
+              </div>
+              <span class="status s-arbeit">In Arbeit</span>
+            </div>
+            <div class="job">
+              <div class="zeit">09:00<small>2 Std</small></div>
+              <div class="body">
+                <b>PAX Schrankwand, 3 Elemente</b>
+                <div class="adr">Stallschreiberstr. 47, 10969 Berlin · Etage 6/7</div>
+                <div class="crew">Team 2 · Basal — 150 € brutto, bestätigt</div>
+              </div>
+              <span class="status s-weg">Unterwegs</span>
+            </div>
+            <div class="job">
+              <div class="zeit">14:00<small>3 Std</small></div>
+              <div class="body">
+                <b>Möbelmontage, Schlafzimmer</b>
+                <div class="adr">Adresse fehlt noch — Kunde Matar</div>
+                <div class="crew">Team 2 · Preis noch nicht freigegeben</div>
+              </div>
+              <span class="status s-plan">Geplant</span>
+            </div>
+            <div class="hint">Ohne genaue Adresse lässt sich der Termin nicht verbindlich einplanen.</div>
+          </div>
+
+          <div class="panel">
+            <h2>Was jetzt dran ist <span class="mini">5 Aufgaben</span></h2>
+            <div class="job"><div class="zeit" style="color:var(--rot)">!</div>
+              <div class="body"><b>Melanie Stankovic antworten</b>
+              <div class="adr">Angebot v3 raus, seit 2 Tagen keine Bestätigung</div></div>
+              <button class="btn ghost sm">Nachfassen</button></div>
+            <div class="job"><div class="zeit" style="color:var(--rot)">!</div>
+              <div class="body"><b>Mohammadreza — Preis freigeben</b>
+              <div class="adr">Gebrauchte Küche 3,30 m, mit Geräten, ohne Kühlschrank</div></div>
+              <button class="btn sm">Preis setzen</button></div>
+            <div class="job"><div class="zeit" style="color:var(--text-2)">○</div>
+              <div class="body"><b>Erinnerung an Basal senden</b>
+              <div class="adr">Termin morgen 09:00 · Parkplatz-Hinweis inklusive</div></div>
+              <button class="btn ghost sm">Senden</button></div>
+            <div class="job"><div class="zeit" style="color:var(--text-2)">○</div>
+              <div class="body"><b>Google-Bewertung anfragen</b>
+              <div class="adr">Küchenmontage Pankow, gestern abgenommen</div></div>
+              <button class="btn ghost sm">Senden</button></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════ POSTEINGANG ══════════ -->
+    <section data-p="post" hidden>
+      <header class="top">
+        <h1>Posteingang</h1>
+        <span class="datum">Alle Kanäle in einem Fenster</span>
+        <span class="search">In Nachrichten suchen</span>
+        <button class="btn">Neue Anfrage</button>
+      </header>
+      <div class="wrap">
+        <div class="cols">
+          <div class="panel">
+            <h2>Unbeantwortet <span class="mini">Zeit seit der letzten Kundennachricht</span></h2>
+            <div class="msg neu"><div class="ch wa">WA</div><div class="txt"><b>+49 176 34632129</b>
+              <p>Die ist zu 95 % fertig. Können Sie mir bitte den Preis vermitteln?</p></div>
+              <div class="alt spaet">47 Min</div></div>
+            <div class="msg neu"><div class="ch ig">IG</div><div class="txt"><b>Mohammadreza</b>
+              <p>Ich möchte eine Küche kaufen · 3,3 m · gebraucht</p></div>
+              <div class="alt spaet">32 Min</div></div>
+            <div class="msg neu"><div class="ch web">WEB</div><div class="txt"><b>Formular · Google Ads</b>
+              <p>Küchenmontage Prenzlauer Berg, Nobilia, Termin nächste Woche</p></div>
+              <div class="alt spaet">18 Min</div></div>
+            <div class="msg neu"><div class="ch tel">TEL</div><div class="txt"><b>+49 173 9871884</b>
+              <p>Verpasster Anruf, 05:32 — noch nicht zurückgerufen</p></div>
+              <div class="alt">6 Min</div></div>
+            <div class="msg"><div class="ch kl">KA</div><div class="txt"><b>Kleinanzeigen · manuell erfasst</b>
+              <p>Wohnzimmerschrank abbauen und entsorgen, Spandau</p></div>
+              <div class="alt">gestern</div></div>
+            <div class="msg"><div class="ch mail">@</div><div class="txt"><b>hausverwaltung-nord@…</b>
+              <p>Angebot für 4 Wohnungen, Möblierung, wiederkehrend</p></div>
+              <div class="alt">gestern</div></div>
+          </div>
+
+          <div class="panel">
+            <h2>Vorlagen <span class="mini">ein Klick, Sprache folgt dem Kunden</span></h2>
+            <div class="job"><div class="body"><b>Erstantwort mit Datenabfrage</b>
+              <div class="adr">Fotos, Adresse, Etage, Aufzug, Wunschtermin</div></div>
+              <button class="btn ghost sm">Einfügen</button></div>
+            <div class="job"><div class="body"><b>Angebot Küchenmontage</b>
+              <div class="adr">Leistungen, Preis, Garantie, Parkplatz, nächster Schritt</div></div>
+              <button class="btn ghost sm">Einfügen</button></div>
+            <div class="job"><div class="body"><b>Stundensatz-Angebot</b>
+              <div class="adr">45 €/Std je Monteur · nur tatsächlich benötigte Zeit</div></div>
+              <button class="btn ghost sm">Einfügen</button></div>
+            <div class="job"><div class="body"><b>Nachfassen 1 · nach 2 Tagen</b>
+              <div class="adr">Ruhig, ohne Druck, mit klarem nächstem Schritt</div></div>
+              <button class="btn ghost sm">Einfügen</button></div>
+            <div class="job"><div class="body"><b>„Zu teuer“ — Wert erklären</b>
+              <div class="adr">Erfahrung, Garantie, saubere Ausführung, klare Absprachen</div></div>
+              <button class="btn ghost sm">Einfügen</button></div>
+            <div class="job"><div class="body"><b>Terminerinnerung · 24 Std vorher</b>
+              <div class="adr">Uhrzeit, Team, Bitte um Parkplatz</div></div>
+              <button class="btn ghost sm">Einfügen</button></div>
+            <div class="hint">Platzhalter wie {Nachname}, {Preis} und {Termin} werden aus der Auftragskarte gefüllt.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════ ANFRAGEN ══════════ -->
+    <section data-p="anfragen" hidden>
+      <header class="top">
+        <h1>Anfragen</h1>
+        <span class="datum">18 offen · 4 190 € im Rennen</span>
+        <span class="search">Kunde oder Adresse suchen</span>
+        <button class="btn">Neue Anfrage</button>
+      </header>
+      <div class="wrap">
+        <div class="board">
+
+          <div class="spalte"><h3><i style="background:var(--rot)"></i>Neu<span>4</span></h3>
+            <div class="karte"><b>Küche fertig bauen</b><div class="meta">Neukölln · 95 % fertig, Restarbeiten</div>
+              <div class="fuss"><span class="tag wa">WhatsApp</span><span class="preis offen">Preis offen</span></div></div>
+            <div class="karte"><b>Mohammadreza</b><div class="meta">Gebrauchte Küche 3,30 m, mit Geräten</div>
+              <div class="fuss"><span class="tag ig">Instagram</span><span class="preis offen">Preis offen</span></div></div>
+            <div class="karte"><b>Küchenmontage Nobilia</b><div class="meta">Prenzlauer Berg · Termin nächste Woche</div>
+              <div class="fuss"><span class="tag web">Google Ads</span><span class="preis offen">Preis offen</span></div></div>
+          </div>
+
+          <div class="spalte"><h3><i style="background:var(--gelb)"></i>Daten fehlen<span>3</span></h3>
+            <div class="karte"><b>Matar</b><div class="meta">Adresse und Etage fehlen</div>
+              <div class="fuss"><span class="tag wa">WhatsApp</span><span class="preis">480 €</span></div></div>
+            <div class="karte"><b>Schrankwand Spandau</b><div class="meta">Fotos angefragt</div>
+              <div class="fuss"><span class="tag kl">Kleinanzeigen</span><span class="preis offen">Preis offen</span></div></div>
+          </div>
+
+          <div class="spalte"><h3><i></i>Angebot raus<span>7</span></h3>
+            <div class="karte"><b>Melanie Stankovic</b><div class="meta">BESTA → METOD, 11 Korpusse, 36 Schubladen</div>
+              <div class="fuss"><span class="tag wa">WhatsApp</span><span class="preis">1 240 €</span><span class="tag">v3</span></div></div>
+            <div class="karte"><b>Hausverwaltung Nord</b><div class="meta">4 Wohnungen möblieren</div>
+              <div class="fuss"><span class="tag">E-Mail</span><span class="preis">2 100 €</span></div></div>
+            <div class="karte"><b>Umzug Charlottenburg</b><div class="meta">2 Zimmer, mit Demontage</div>
+              <div class="fuss"><span class="tag web">Website</span><span class="preis">640 €</span></div></div>
+          </div>
+
+          <div class="spalte"><h3><i style="background:var(--rot)"></i>Nachfassen<span>2</span></h3>
+            <div class="karte"><b>Küche Lichtenberg</b><div class="meta">Seit 4 Tagen keine Antwort</div>
+              <div class="fuss"><span class="tag wa">WhatsApp</span><span class="preis">890 €</span></div></div>
+          </div>
+
+          <div class="spalte"><h3><i style="background:var(--gruen)"></i>Bestätigt<span>2</span></h3>
+            <div class="karte"><b>Basal</b><div class="meta">Stallschreiberstr. 47 · Etage 6/7</div>
+              <div class="fuss"><span class="tag wa">WhatsApp</span><span class="preis">150 €</span></div></div>
+          </div>
+
+          <div class="spalte"><h3><i style="background:var(--blau)"></i>Termin geplant<span>3</span></h3>
+            <div class="karte"><b>Küche Pankow</b><div class="meta">Mi 16.09, Team 1, ganztags</div>
+              <div class="fuss"><span class="tag web">Google Ads</span><span class="preis">1 450 €</span></div></div>
+          </div>
+
+          <div class="spalte"><h3><i style="background:var(--text-2)"></i>Ausgeführt<span>6</span></h3>
+            <div class="karte"><b>Möbelmontage Mitte</b><div class="meta">Abnahme unterschrieben, 8 Fotos</div>
+              <div class="fuss"><span class="preis">320 €</span><button class="btn sm">Rechnung</button></div></div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════ EINSATZPLAN ══════════ -->
+    <section data-p="plan" hidden>
+      <header class="top">
+        <h1>Einsatzplan</h1>
+        <span class="datum">KW 38 · 15.–19. September</span>
+        <span class="search">Auftrag suchen und einplanen</span>
+        <button class="btn">Termin anlegen</button>
+      </header>
+      <div class="wrap">
+        <div class="plan">
+          <div class="plan-kopf">
+            <b>Woche</b>
+            <button class="btn ghost sm">Tag</button>
+            <button class="btn ghost sm">Monat</button>
+            <span style="margin-left:auto;color:var(--text-2);font-size:12.5px">
+              Auftrag aus der Liste in eine Zelle ziehen · Fahrzeit zwischen Adressen wird geprüft</span>
+          </div>
+          <div class="gitter">
+            <table>
+              <thead><tr><th>Team</th><th>Mo 15.</th><th>Di 16.</th><th>Mi 17.</th><th>Do 18.</th><th>Fr 19.</th></tr></thead>
+              <tbody>
+                <tr>
+                  <td>Team 1<small>Ivan, Andrej</small></td>
+                  <td><div class="blk b-kueche"><b>08:30 Küche Neukölln</b><small>Restarbeiten · 4 Std</small></div></td>
+                  <td><div class="blk b-kueche"><b>08:00 Küche Pankow</b><small>Nobilia · ganztags</small></div></td>
+                  <td><div class="blk b-kueche konflikt"><b>08:00 Küche Pankow</b><small>läuft über · Fr prüfen</small></div></td>
+                  <td><div class="blk b-moebel"><b>09:00 Melanie S.</b><small>METOD · offen bis Bestätigung</small></div></td>
+                  <td><div class="blk b-frei">frei</div></td>
+                </tr>
+                <tr>
+                  <td>Team 2<small>Sergej, Marius</small></td>
+                  <td><div class="blk b-moebel"><b>09:00 Basal</b><small>PAX · Etage 6/7 · 2 Std</small></div></td>
+                  <td><div class="blk b-transport"><b>10:00 Transport</b><small>Charlottenburg · 3 Std</small></div></td>
+                  <td><div class="blk b-moebel"><b>09:00 Möbel Mitte</b><small>Schlafzimmer · 3 Std</small></div></td>
+                  <td><div class="blk b-frei">frei ab 13:00</div></td>
+                  <td><div class="blk b-moebel"><b>10:00 Spandau</b><small>Demontage + Entsorgung</small></div></td>
+                </tr>
+                <tr>
+                  <td>Ivan allein<small>kleine Aufträge</small></td>
+                  <td><div class="blk b-frei">frei</div></td>
+                  <td><div class="blk b-moebel"><b>16:00 Reparatur</b><small>Schublade · 1 Std</small></div></td>
+                  <td><div class="blk b-frei">frei</div></td>
+                  <td><div class="blk b-frei">frei</div></td>
+                  <td><div class="blk b-frei">frei</div></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="hint">Rot markiert: der Auftrag passt zeitlich nicht in den geplanten Tag. Entweder Dauer korrigieren oder auf Freitag verschieben.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════ ANGEBOT ══════════ -->
+    <section data-p="angebot" hidden>
+      <header class="top">
+        <h1>Angebot · Mohammadreza</h1>
+        <span class="datum">Entwurf · Instagram · gebrauchte Küche 3,30 m</span>
+        <button class="btn ghost" style="margin-left:auto">Als PDF</button>
+        <button class="btn">Text kopieren</button>
+      </header>
+      <div class="wrap">
+        <div class="zwei">
+          <div class="panel">
+            <h2>Angaben</h2>
+            <div class="feld"><span class="lab">Vorlage</span><span class="ein">Küchenmontage · WhatsApp kurz</span></div>
+            <div class="feld"><span class="lab">Sprache</span><span class="ein">Deutsch — erkannt aus dem Chat</span></div>
+            <div class="feld"><span class="lab">Leistungen</span><span class="ein">Montage, Ausrichtung, Sockelleisten, Anschluss an vorhandene Anschlüsse</span></div>
+            <div class="feld"><span class="lab">Abrechnung</span><span class="ein">Stundensatz · 45 € netto je Monteur</span></div>
+            <div class="feld"><span class="lab">Aufwand</span><span class="ein">2 Monteure × 3–4 Std → 270–360 € netto</span></div>
+            <div class="feld"><span class="lab">Preis</span><span class="ein gesperrt">Gesperrt — Freigabe durch Inhaber nötig</span></div>
+            <div class="feld"><span class="lab">Immer dabei</span><span class="ein">1 Jahr Garantie · Parkplatz · Umfangsklausel</span></div>
+            <div class="hint">Ohne Freigabe des Preises lässt sich das Angebot nicht senden. So kommt keine erfundene Zahl zum Kunden.</div>
+          </div>
+
+          <div class="panel">
+            <h2>Vorschau <span class="mini">genau so geht es raus</span></h2>
+            <div style="padding:15px">
+              <div class="vorschau">Guten Tag 😊
+
+vielen Dank für Ihre Anfrage.
+
+Gerne übernehmen wir die Fertigstellung Ihrer Küche — Ausrichten der Schränke, Montage der Fronten und Blenden sowie den Anschluss der Geräte an die vorhandenen Anschlüsse.
+
+💶 Für solche Restarbeiten rechnen wir nach Aufwand: 45 € netto pro Stunde und Monteur. Wir kommen zu zweit und rechnen mit ca. 3–4 Stunden. Abgerechnet wird nur die tatsächlich benötigte Zeit.
+
+🛠️ Auf unsere ausgeführte Montagearbeit erhalten Sie 1 Jahr Garantie.
+
+🚗 Bitte sorgen Sie am Montagetag nach Möglichkeit für einen Parkplatz in der Nähe des Eingangs, da wir mit Werkzeug und Material kommen.
+
+📅 Wenn das für Sie passt, planen wir den Termin gerne fest ein. Dafür benötigen wir bitte noch die genaue Adresse und Ihren Nachnamen.
+
+Mit freundlichen Grüßen
+MöbelStock24
+Tel./WhatsApp: +49 176 79892037
+E-Mail: mobelstock24@gmail.com
+Website: https://mobel-montage-berlin.de</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════ MONTEUR ══════════ -->
+    <section data-p="monteur" hidden>
+      <header class="top">
+        <h1>Monteur-App</h1>
+        <span class="datum">Läuft im Browser des Handys · funktioniert auch ohne Netz im Keller</span>
+      </header>
+      <div class="wrap">
+        <div class="phones">
+
+          <div class="phone"><div class="screen">
+            <div class="p-top"><b>Heute · Montag</b><small>Sergej · Team 2 · 2 Einsätze</small></div>
+            <div class="p-body">
+              <div class="p-card">
+                <div class="kopf"><b>09:00</b><span class="status s-weg">Unterwegs</span></div>
+                <div class="adr">Stallschreiberstr. 47, 10969 Berlin<br>Etage 6/7 · Aufzug vorhanden</div>
+                <b style="font-size:13.5px">PAX Schrankwand, 3 Elemente</b>
+                <ul><li>Aufbau und Wandbefestigung</li><li>Türen ausrichten</li><li>Verpackung mitnehmen</li></ul>
+                <div class="hinweis">🚗 Parkplatz vom Kunden zugesagt, Hofeinfahrt links.</div>
+                <div class="p-btns"><button>Navigation</button><button>Anrufen</button><button class="an">Angekommen</button></div>
+              </div>
+              <div class="p-card">
+                <div class="kopf"><b>14:00</b><span class="status s-plan">Geplant</span></div>
+                <div class="adr">Adresse wird noch bestätigt</div>
+                <b style="font-size:13.5px">Möbelmontage Schlafzimmer</b>
+              </div>
+            </div>
+          </div></div>
+
+          <div class="phone"><div class="screen">
+            <div class="p-top"><b>Auftrag abschließen</b><small>Basal · Stallschreiberstr. 47</small></div>
+            <div class="p-body">
+              <div class="p-card">
+                <b style="font-size:13.5px">Fotos</b>
+                <div class="adr" style="margin:2px 0 0">Mindestens zwei vorher und zwei nachher</div>
+                <div class="foto-reihe">
+                  <div class="foto voll">vorher 1</div><div class="foto voll">vorher 2</div>
+                  <div class="foto voll">nachher 1</div><div class="foto">+</div>
+                </div>
+                <div class="hinweis">Ein Foto wartet auf Netz und wird automatisch gesendet.</div>
+              </div>
+              <div class="p-card">
+                <b style="font-size:13.5px">Abnahme</b>
+                <ul><li>Montage vollständig</li><li>Alles ausgerichtet und fest</li><li>Arbeitsplatz sauber verlassen</li></ul>
+                <div class="adr" style="margin:9px 0 0">Unterschrift des Kunden</div>
+                <div class="sig">
+                  <svg width="150" height="42" viewBox="0 0 150 42" fill="none" stroke="#1E2326" stroke-width="2" stroke-linecap="round">
+                    <path d="M8 30c9-16 14 6 21-6s10 14 18 2 12 4 20-8 14 12 22 4 16-6 24-10"/>
+                  </svg>
+                </div>
+                <div class="p-btns"><button>Notiz</button><button class="an">Fertig melden</button></div>
+              </div>
+              <div class="p-card">
+                <b style="font-size:13.5px">Zeit und Material</b>
+                <div class="adr" style="margin:3px 0 0">08:52 – 11:04 · 2 Std 12 Min</div>
+                <div class="p-btns"><button>Material +</button><button>Mehraufwand melden</button></div>
+              </div>
+            </div>
+          </div></div>
+
+        </div>
+      </div>
+    </section>
+
+  </div>
+</div>
+
+<script>
+const tabs=document.querySelectorAll('.nav button[data-t]');
+const panes=document.querySelectorAll('section[data-p]');
+tabs.forEach(t=>t.addEventListener('click',()=>{
+  tabs.forEach(x=>x.setAttribute('aria-selected',x===t));
+  panes.forEach(p=>p.hidden = p.dataset.p!==t.dataset.t);
+  window.scrollTo({top:0});
+}));
+</script>
+</body>
+</html>
