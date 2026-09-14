@@ -3,10 +3,105 @@
     "name": "MöbelStock24",
     "tagline": "Interne Plattform"
   },
+  "nav": {
+    "tagline": "Interne Plattform",
+    "heute": "Heute",
+    "anfragen": "Anfragen",
+    "einsatzplan": "Einsatzplan",
+    "angebote": "Angebote",
+    "kunden": "Kunden",
+    "monteur": "Monteur-App",
+    "benutzer": "Benutzer",
+    "soon": "bald",
+    "logout": "Abmelden",
+    "roles": {
+      "INHABER": "Inhaber",
+      "DISPONENT": "Disponent",
+      "MONTEUR": "Monteur",
+      "BUCHHALTUNG": "Buchhaltung"
+    }
+  },
+  "login": {
+    "subtitle": "Anmeldung für Mitarbeiter",
+    "email": "E-Mail",
+    "password": "Passwort",
+    "totp": "Code aus der Authenticator-App",
+    "totpHint": "Sechsstelliger Code, wechselt alle 30 Sekunden",
+    "totpPrompt": "Passwort korrekt. Bitte den Code aus Ihrer Authenticator-App eingeben.",
+    "recoveryCode": "Oder Wiederherstellungscode",
+    "recoveryHint": "Nur falls das Telefon nicht verfügbar ist. Jeder Code gilt einmal.",
+    "submit": "Anmelden",
+    "submitSecond": "Bestätigen",
+    "setupLink": "Jetzt einrichten",
+    "errors": {
+      "invalid_credentials": "E-Mail oder Passwort ist falsch.",
+      "totp_required": "Bitte den Code aus der Authenticator-App eingeben.",
+      "totp_invalid": "Der Code stimmt nicht. Bitte erneut versuchen.",
+      "totp_setup_required": "Die Rolle Inhaber erfordert eine Zwei-Faktor-Anmeldung.",
+      "too_many_attempts": "Zu viele Fehlversuche. Bitte in 15 Minuten erneut versuchen."
+    }
+  },
+  "twofactor": {
+    "title": "Zwei-Faktor-Anmeldung",
+    "subtitle": "Einrichtung für die Rolle Inhaber",
+    "email": "E-Mail",
+    "password": "Passwort",
+    "code": "Code aus der App",
+    "codeHint": "Sechsstelliger Code aus der Authenticator-App",
+    "start": "Weiter",
+    "confirm": "Aktivieren",
+    "scanHint": "QR-Code mit Google Authenticator, Aegis, 1Password oder einer vergleichbaren App scannen.",
+    "qrAlt": "QR-Code zur Einrichtung der Zwei-Faktor-Anmeldung",
+    "manualHint": "Falls die Kamera den Code nicht liest, diesen Schlüssel manuell eintragen:",
+    "enabled": "Zwei-Faktor-Anmeldung ist aktiv.",
+    "recoveryTitle": "Wiederherstellungscodes",
+    "recoveryWarning": "Diese Codes werden nur jetzt angezeigt. Bitte ausdrucken oder sicher speichern. Jeder Code gilt einmal und ersetzt den Code aus der App, falls das Telefon nicht verfügbar ist.",
+    "toLogin": "Zur Anmeldung",
+    "errors": {
+      "invalid_credentials": "E-Mail oder Passwort ist falsch.",
+      "already_enabled": "Für dieses Konto ist die Zwei-Faktor-Anmeldung bereits aktiv. Ein Zurücksetzen ist nur durch den Inhaber möglich.",
+      "wrong_code": "Der Code stimmt nicht. Bitte die Uhrzeit des Telefons prüfen und erneut versuchen.",
+      "setup_expired": "Die Einrichtung wurde nicht gefunden. Bitte erneut beginnen."
+    }
+  },
+  "heute": {
+    "greeting": "Guten Tag, {name}.",
+    "empty": "Anfragen, Einsatzplan und Kennzahlen erscheinen hier, sobald die entsprechenden Module gebaut sind."
+  },
+  "users": {
+    "createTitle": "Neuen Mitarbeiter anlegen",
+    "name": "Name",
+    "email": "E-Mail",
+    "phone": "Telefon",
+    "role": "Rolle",
+    "password": "Passwort",
+    "passwordHint": "Mindestens 12 Zeichen. Der Mitarbeiter kann es später ändern.",
+    "newPassword": "Neues Passwort",
+    "setPassword": "Passwort setzen",
+    "create": "Anlegen",
+    "save": "Speichern",
+    "activeLabel": "Zugang aktiv",
+    "twoFactor": "2FA",
+    "lastLogin": "Letzte Anmeldung",
+    "never": "nie",
+    "on": "aktiv",
+    "off": "inaktiv",
+    "resetTotp": "2FA zurücksetzen",
+    "roles": {
+      "INHABER": "Inhaber",
+      "DISPONENT": "Disponent",
+      "MONTEUR": "Monteur",
+      "BUCHHALTUNG": "Buchhaltung"
+    }
+  },
   "setup": {
     "title": "Einrichtung",
     "dbReady": "Datenbank verbunden",
     "dbFailed": "Keine Verbindung zur Datenbank",
     "migrations": "Angewendete Migrationen"
+  },
+  "monteur": {
+    "today": "Heute",
+    "empty": "Ihre Einsätze erscheinen hier, sobald der Einsatzplan gebaut ist."
   }
 }

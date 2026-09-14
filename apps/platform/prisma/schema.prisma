@@ -535,7 +535,12 @@ model ActivityLog {
   entityId String
 
   userId String?
-  user   User?   @relation(fields: [userId], references: [id])
+  /// Restrict, а не SET NULL: обнуление ссылки — это UPDATE журнала, который
+  /// запрещён триггером неизменяемости, и попытка удалить сотрудника падала
+  /// бы невнятной ошибкой из глубины базы. Сотрудников не удаляют, а
+  /// отключают; по требованию DSGVO их данные обезличиваются, а записи
+  /// журнала продолжают ссылаться на обезличенную учётную запись.
+  user   User?   @relation(fields: [userId], references: [id], onDelete: Restrict)
 
   action String // "deal.price_set", "deal.status_changed", "offer.sent", ...
 

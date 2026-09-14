@@ -50,4 +50,16 @@ function load() {
   return env;
 }
 
-export const env = load();
+/**
+ * Проверка выполняется при первом обращении к переменной, а не при загрузке
+ * модуля. Иначе `npm run build` требовал бы заполненный .env, а Dockerfile
+ * собирает образ до того, как секреты попадают в контейнер.
+ */
+let cached: ReturnType<typeof load> | null = null;
+
+export const env = new Proxy({} as ReturnType<typeof load>, {
+  get(_target, prop) {
+    cached ??= load();
+    return cached[prop as keyof typeof cached];
+  },
+});

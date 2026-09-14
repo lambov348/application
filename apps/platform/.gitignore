@@ -15,3 +15,7 @@ next-env.d.ts
 
 # Локальный кластер PostgreSQL для разработки без Docker
 /.pgdata
+
+# Временные скрипты проверки, не часть проекта
+*.local.mjs
+*.local.ts
