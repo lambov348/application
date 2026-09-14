@@ -7,7 +7,14 @@ import { cn } from "@/lib/utils";
  * Переключатель DE/RU. Обычные формы без JavaScript: работает и в подвале
  * с плохой связью, где гидратация клиентского кода может не доехать.
  */
-export async function LocaleSwitcher({ className }: { className?: string }) {
+export async function LocaleSwitcher({
+  className,
+  variant = "light",
+}: {
+  className?: string;
+  /** dark — для тёмных экранов кабинета бригады. */
+  variant?: "light" | "dark";
+}) {
   const current = await getLocale();
   const h = await headers();
   // Заголовок ставит Next для серверных компонентов; при его отсутствии
@@ -25,9 +32,13 @@ export async function LocaleSwitcher({ className }: { className?: string }) {
             aria-current={locale === current ? "true" : undefined}
             className={cn(
               "rounded-[3px] px-2 py-1 text-xs",
-              locale === current
-                ? "bg-stahl font-semibold text-white"
-                : "text-text-2 hover:bg-linie-2",
+              variant === "dark"
+                ? locale === current
+                  ? "bg-stahl-2 font-semibold text-white"
+                  : "text-[#7D878B]"
+                : locale === current
+                  ? "bg-stahl font-semibold text-white"
+                  : "text-text-2 hover:bg-linie-2",
             )}
           >
             {LOCALE_LABELS[locale]}

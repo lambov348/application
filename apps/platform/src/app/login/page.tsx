@@ -24,8 +24,11 @@ export default async function LoginPage() {
           <LoginForm />
         </div>
 
-        <div className="mt-4 flex justify-center">
+        <div className="mt-4 flex items-center justify-between">
           <LocaleSwitcher />
+          <a href="/m/anmelden" className="text-text-2 text-xs underline">
+            {t("teamLink")}
+          </a>
         </div>
       </div>
     </main>

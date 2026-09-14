@@ -24,7 +24,9 @@ export const ROUTE_ACCESS: { prefix: string; roles: Role[] }[] = [
 
 /** Маршруты, открытые без входа. */
 const PUBLIC_PREFIXES = [
-  "/login",
+  "/login", // вход для офиса
+  "/m/anmelden", // вход для бригады
+  "/offline", // заглушка «нет связи» для service worker
   "/angebot", // публичная страница принятия Angebot по токену
   "/api/auth",
   "/api/webhook",

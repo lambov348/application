@@ -91,7 +91,7 @@ export async function AppShell({
         </nav>
 
         <div className="flex items-center gap-2.5 border-t border-[#343B3F] px-4 py-3">
-          <span className="bg-gelb text-stahl grid h-[27px] w-[27px] place-items-center rounded-full text-xs font-bold">
+          <span className="bg-gelb text-stahl grid h-[27px] w-[27px] place-items-center rounded-full text-xs font-semibold">
             {initials}
           </span>
           <span className="min-w-0">

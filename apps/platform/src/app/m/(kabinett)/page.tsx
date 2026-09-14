@@ -1,5 +1,5 @@
 import { getTranslations } from "next-intl/server";
-import { requireRole } from "@/server/auth/guards";
+import { requireMonteurArea } from "@/server/auth/guards";
 import { Alert } from "@/components/ui/alert";
 
 /**
@@ -7,7 +7,7 @@ import { Alert } from "@/components/ui/alert";
  * (кусок 9). Выдуманных выездов здесь нет.
  */
 export default async function MonteurHeutePage() {
-  await requireRole("MONTEUR", "INHABER", "DISPONENT");
+  await requireMonteurArea();
   const t = await getTranslations("monteur");
 
   return (

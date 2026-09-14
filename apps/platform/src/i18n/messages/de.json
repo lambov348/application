@@ -39,7 +39,10 @@
       "totp_invalid": "Der Code stimmt nicht. Bitte erneut versuchen.",
       "totp_setup_required": "Die Rolle Inhaber erfordert eine Zwei-Faktor-Anmeldung.",
       "too_many_attempts": "Zu viele Fehlversuche. Bitte in 15 Minuten erneut versuchen."
-    }
+    },
+    "teamSubtitle": "Zugang für Monteure",
+    "officeLink": "Büro-Anmeldung",
+    "teamLink": "Monteur-Zugang"
   },
   "twofactor": {
     "title": "Zwei-Faktor-Anmeldung",
@@ -103,5 +106,10 @@
   "monteur": {
     "today": "Heute",
     "empty": "Ihre Einsätze erscheinen hier, sobald der Einsatzplan gebaut ist."
+  },
+  "offline": {
+    "title": "Keine Verbindung",
+    "hint": "Das Gerät ist gerade offline. Sobald wieder Netz da ist, funktioniert alles wie gewohnt.",
+    "retry": "Erneut versuchen"
   }
 }

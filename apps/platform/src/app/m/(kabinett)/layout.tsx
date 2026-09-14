@@ -1,17 +1,21 @@
 import { getTranslations } from "next-intl/server";
-import { requireRole } from "@/server/auth/guards";
+import { requireMonteurArea } from "@/server/auth/guards";
 import { LocaleSwitcher } from "@/components/LocaleSwitcher";
 
 /**
  * Кабинет монтажника. Отдельная оболочка без бокового рельса: это телефон
  * в руке на объекте, а не монитор в офисе.
+ *
+ * Группа маршрутов (kabinett) не меняет адреса, но выводит страницу входа
+ * /m/anmelden из-под этой разметки. Иначе вход требовал бы авторизации и
+ * перенаправлял неавторизованного сам на себя — бесконечный цикл.
  */
 export default async function MonteurLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const user = await requireRole("MONTEUR", "INHABER", "DISPONENT");
+  const user = await requireMonteurArea();
   const t = await getTranslations("nav");
 
   return (

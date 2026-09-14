@@ -56,10 +56,15 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
   return rest;
 });
 
-/** Пользователь или перенаправление на вход. */
-export async function requireUser(): Promise<CurrentUser> {
+/**
+ * Пользователь или перенаправление на вход.
+ *
+ * `loginPath` позволяет вернуть человека на тот вход, с которого он пришёл:
+ * бригада работает в мобильном кабинете и не должна попадать на офисную форму.
+ */
+export async function requireUser(loginPath = "/login"): Promise<CurrentUser> {
   const user = await getCurrentUser();
-  if (!user) redirect("/login");
+  if (!user) redirect(loginPath);
   return user;
 }
 
@@ -68,6 +73,15 @@ export async function requireRole(...roles: Role[]): Promise<CurrentUser> {
   const user = await requireUser();
   if (!roles.includes(user.role)) {
     redirect(user.role === "MONTEUR" ? "/m" : "/heute");
+  }
+  return user;
+}
+
+/** То же для мобильного кабинета: неавторизованных ведём на вход бригады. */
+export async function requireMonteurArea(): Promise<CurrentUser> {
+  const user = await requireUser("/m/anmelden");
+  if (!["MONTEUR", "INHABER", "DISPONENT"].includes(user.role)) {
+    redirect("/heute");
   }
   return user;
 }

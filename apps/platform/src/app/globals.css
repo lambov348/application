@@ -21,7 +21,10 @@
 
   /* У Barlow нет кириллицы: русский текст рисуется следующим шрифтом стека. */
   --font-sans: "Barlow", "Segoe UI", "Noto Sans", system-ui, sans-serif;
-  --font-cond: "Barlow Semi Condensed", "Barlow", "Segoe UI", system-ui, sans-serif;
+  /* Узкое начертание из макета не грузится: в интерфейсе оно не
+     применяется, а это четыре лишних файла шрифта. Токен оставлен,
+     чтобы вёрстка не сломалась, и ведёт на основное семейство. */
+  --font-cond: "Barlow", "Segoe UI", system-ui, sans-serif;
 }
 
 @layer base {
