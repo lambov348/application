@@ -1,0 +1,12 @@
+{
+  "app": {
+    "name": "MöbelStock24",
+    "tagline": "Interne Plattform"
+  },
+  "setup": {
+    "title": "Einrichtung",
+    "dbReady": "Datenbank verbunden",
+    "dbFailed": "Keine Verbindung zur Datenbank",
+    "migrations": "Angewendete Migrationen"
+  }
+}

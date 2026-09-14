@@ -1,0 +1,42 @@
+@import "tailwindcss";
+
+/*
+ * Палитра и типографика перенесены один в один из mockup_mobelstock24.html.
+ * В Tailwind 4 конфигурация живёт в CSS, отдельного tailwind.config.ts нет.
+ */
+@theme {
+  --color-stahl: #1e2326; /* тёмный рельс и основной текст */
+  --color-stahl-2: #2a3034;
+  --color-beton: #eaeae4; /* фон страницы */
+  --color-blatt: #ffffff; /* фон карточек */
+  --color-linie: #d4d4cb; /* границы */
+  --color-linie-2: #e4e4dc;
+  --color-text-2: #646c6f; /* вторичный текст */
+  --color-blau: #1a4f7a; /* основное действие */
+  --color-gelb: #f0b429; /* внимание */
+  --color-gruen: #2d6a4f; /* успех */
+  --color-rot: #a63a2b; /* ошибка, просрочка */
+
+  --radius-base: 3px;
+
+  /* У Barlow нет кириллицы: русский текст рисуется следующим шрифтом стека. */
+  --font-sans: "Barlow", "Segoe UI", "Noto Sans", system-ui, sans-serif;
+  --font-cond: "Barlow Semi Condensed", "Barlow", "Segoe UI", system-ui, sans-serif;
+}
+
+@layer base {
+  html {
+    /* Плотный интерфейс как в макете: базовый кегль 14px. */
+    font-size: 14px;
+  }
+
+  body {
+    background-color: var(--color-beton);
+    color: var(--color-stahl);
+    font-family: var(--font-sans);
+    line-height: 1.45;
+    /* Моноширинные цифры: суммы и время в таблицах должны стоять в колонку. */
+    font-variant-numeric: tabular-nums;
+    -webkit-font-smoothing: antialiased;
+  }
+}

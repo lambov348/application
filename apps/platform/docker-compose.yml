@@ -1,0 +1,59 @@
+# Локальная разработка. Продакшен-конфигурация (Caddy с автоматическим HTTPS,
+# бэкапы, Hetzner) появится последним куском Этапа 1.
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: moebelstock24
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-dev_only_change_me}
+      POSTGRES_DB: moebelstock24
+      # Детерминированная сортировка: иначе порядок имён клиентов зависит от
+      # локали хоста и отличается между машиной разработчика и сервером.
+      LANG: C.UTF-8
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "127.0.0.1:5432:5432" # наружу не публикуем
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U moebelstock24 -d moebelstock24"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    # Нужен для очередей BullMQ в Этапе 2. Поднимаем сразу, чтобы подключение
+    # было одной строкой, но фоновых задач в Этапе 1 нет — воркер не запускаем.
+    command: ["redis-server", "--save", "60", "1", "--loglevel", "warning"]
+    volumes:
+      - redisdata:/data
+    ports:
+      - "127.0.0.1:6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql://moebelstock24:${POSTGRES_PASSWORD:-dev_only_change_me}@postgres:5432/moebelstock24?schema=public
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }
+    ports:
+      - "3000:3000"
+    volumes:
+      - filestorage:/app/storage
+
+volumes:
+  pgdata:
+  redisdata:
+  filestorage:

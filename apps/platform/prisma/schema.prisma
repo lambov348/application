@@ -1,0 +1,553 @@
+// Схема данных платформы MöbelStock24.
+// Основана на главе 7 ТЗ. Отклонения и их причины описаны в README, раздел
+// «Отклонения от главы 7 ТЗ».
+//
+// Два сквозных правила:
+//   1. Любая денежная величина — целое число центов (поле *Cents). Никаких float.
+//   2. Любая дата — timestamptz, хранится в UTC. Перевод в Europe/Berlin — только
+//      на выводе, см. src/lib/datetime.ts.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ───────────────────────────── Перечисления ─────────────────────────────────
+
+/// Роли из главы 4 ТЗ. Права проверяются на сервере, см. src/server/auth/guards.ts.
+enum Role {
+  INHABER // владелец: видит всё, единственный ставит цены
+  DISPONENT // диспетчер: заявки, календарь, Angebot по утверждённой цене
+  MONTEUR // монтажник: только свои выезды, цену не видит
+  BUCHHALTUNG // бухгалтер: счета и экспорт (появится в Этапе 2)
+}
+
+/// Налоговый режим фирмы. Переключатель из главы 5.5 ТЗ.
+enum TaxMode {
+  REGELBESTEUERUNG // обычный режим, НДС выделяется
+  KLEINUNTERNEHMER // §19 UStG, НДС не начисляется
+}
+
+enum CustomerType {
+  PRIVAT
+  FIRMA
+}
+
+/// Язык общения с клиентом. Интерфейс пока DE/RU, документы — шире (глава 5.7).
+enum Lang {
+  DE
+  EN
+  RU
+  RO
+}
+
+/// Виды работ из главы 5.2 ТЗ плюс то, что фирма реально делает по главе 1.
+enum ServiceType {
+  MOEBELMONTAGE
+  KUECHENMONTAGE
+  DEMONTAGE
+  TRANSPORT
+  UMZUG
+  ENTSORGUNG
+  REPARATUR
+  GERAETEANSCHLUSS // подключение техники к существующим подводкам
+  ARBEITSPLATTE // вырезы в столешнице
+}
+
+/// Источник заявки. Обязательное поле карточки (глава 5.2).
+enum LeadSource {
+  WEBSITE
+  GOOGLE_ADS
+  WHATSAPP
+  INSTAGRAM
+  KLEINANZEIGEN
+  TIKTOK
+  TELEFON
+  EMAIL
+  EMPFEHLUNG
+  SONSTIGE
+}
+
+/// Колонки канбана из главы 5.2. Переходы проверяет src/server/rules/.
+enum DealStatus {
+  NEU
+  DATEN_FEHLEN
+  ANGEBOT_RAUS
+  NACHFASSEN
+  BESTAETIGT
+  TERMIN_GEPLANT
+  AUSGEFUEHRT
+  RECHNUNG
+  BEZAHLT
+  VERLOREN
+}
+
+/// Причина проигрыша. Обязательна при переходе в VERLOREN (правило 9.7).
+enum LostReason {
+  ZU_TEUER
+  GUENSTIGER_ANBIETER
+  ANDERS_ENTSCHIEDEN
+  KEINE_ANTWORT
+  NICHT_UNSER_PROFIL
+}
+
+enum OfferStatus {
+  ENTWURF
+  GESENDET
+  ANGENOMMEN
+  ABGELEHNT
+  ERSETZT // заменено более новой версией Angebot
+}
+
+/// Объединение статусов из глав 5.3 и 5.6 ТЗ (в 5.3 нет ANGEKOMMEN).
+enum AppointmentStatus {
+  GEPLANT
+  UNTERWEGS
+  ANGEKOMMEN
+  IN_ARBEIT
+  FERTIG
+  ABGESAGT
+}
+
+enum PhotoKind {
+  VORHER
+  NACHHER
+  SCHADEN
+}
+
+enum PriceUnit {
+  STUNDE
+  STUECK
+  PAUSCHALE
+  QM
+  LFM
+}
+
+// ─────────────────────────── Люди и доступ ──────────────────────────────────
+
+model User {
+  id           String  @id @default(cuid())
+  name         String
+  email        String  @unique // одновременно логин
+  passwordHash String
+  role         Role
+  phone        String?
+  active       Boolean @default(true)
+  locale       Lang    @default(DE) // язык интерфейса
+
+  // Двухфакторная аутентификация (глава 4: обязательна для INHABER).
+  // Секрет хранится зашифрованным ключом ENCRYPTION_KEY, не открытым текстом.
+  totpSecret    String?
+  totpEnabledAt DateTime? @db.Timestamptz(3)
+
+  // Отзыв сессий. Auth.js с входом по паролю умеет только JWT, поэтому
+  // действительность токена проверяется по этой отметке: всё, что выдано
+  // раньше, считается недействительным. Даёт «выйти на всех устройствах»
+  // и мгновенное применение блокировки или смены роли.
+  sessionsValidFrom DateTime @default(now()) @db.Timestamptz(3)
+
+  lastLoginAt DateTime? @db.Timestamptz(3)
+  createdAt   DateTime  @default(now()) @db.Timestamptz(3)
+  updatedAt   DateTime  @updatedAt @db.Timestamptz(3)
+
+  recoveryCodes  RecoveryCode[]
+  teams          TeamMember[]
+  assignments    AppointmentAssignee[]
+  timeEntries    TimeEntry[]
+  activity       ActivityLog[]
+  approvedPrices Deal[]                @relation("PriceApprover")
+  uploadedPhotos JobPhoto[]            @relation("PhotoUploader")
+
+  @@index([role, active])
+}
+
+/// Одноразовые коды восстановления на случай потери телефона с TOTP.
+/// Хранится только хеш — восстановить код из базы нельзя.
+model RecoveryCode {
+  id       String    @id @default(cuid())
+  userId   String
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  codeHash String
+  usedAt   DateTime? @db.Timestamptz(3)
+
+  @@index([userId])
+}
+
+/// Бригада: «Team 1», «Team 2», «Ivan». Используется как быстрый способ
+/// назначить состав на выезд и как строка в календаре.
+model Team {
+  id     String  @id @default(cuid())
+  name   String  @unique
+  color  String // hex-цвет для календаря
+  active Boolean @default(true)
+  sort   Int     @default(0)
+
+  members      TeamMember[]
+  appointments Appointment[]
+}
+
+model TeamMember {
+  teamId String
+  userId String
+  team   Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([teamId, userId])
+  @@index([userId])
+}
+
+// ───────────────────────────── Клиенты ──────────────────────────────────────
+
+model Customer {
+  id         String       @id @default(cuid())
+  type       CustomerType @default(PRIVAT)
+  salutation String? // Herr / Frau / пусто
+  firstName  String?
+  lastName   String?
+  company    String?
+  email      String?
+  phone      String?
+  language   Lang         @default(DE)
+  notes      String?
+  tags       String[]     @default([])
+
+  // Löschkonzept (глава 3 ТЗ): персональные данные можно стереть, не удаляя
+  // сделки и связанные с налогами документы.
+  deletedAt    DateTime? @db.Timestamptz(3)
+  anonymizedAt DateTime? @db.Timestamptz(3)
+
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+
+  addresses Address[]
+  deals     Deal[]
+
+  @@index([lastName])
+  @@index([company])
+  @@index([phone])
+  @@index([email])
+}
+
+model Address {
+  id         String   @id @default(cuid())
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  street      String
+  zip         String
+  city        String
+  floor       String? // «3. OG», «EG»
+  elevator    Boolean @default(false)
+  parkingNote String?
+  label       String? // «Zuhause», «Büro» — если адресов несколько
+
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+
+  deals        Deal[]
+  appointments Appointment[]
+
+  @@index([customerId])
+}
+
+// ──────────────────────── Сделка (leads + deals) ────────────────────────────
+
+/// Главы 7 ТЗ описывает leads и deals раздельно, но канбан главы 5.2 — одна
+/// лента колонок, покрывающая обе стадии. Две таблицы дали бы два поля status
+/// и вопрос «какое из них на карточке». Слито в одну сущность.
+model Deal {
+  id     String @id @default(cuid())
+  number Int    @unique @default(autoincrement()) // человекочитаемый номер заявки
+
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id])
+  addressId  String?
+  address    Address? @relation(fields: [addressId], references: [id])
+
+  title    String
+  services ServiceType[] @default([])
+
+  // Происхождение заявки — бывшая таблица leads.
+  source          LeadSource
+  utmSource       String?
+  utmMedium       String?
+  utmCampaign     String?
+  firstResponseAt DateTime? @db.Timestamptz(3) // для метрики «первый ответ < 15 минут» (глава 1)
+
+  status     DealStatus  @default(NEU)
+  lostReason LostReason?
+  lostNote   String?
+
+  // Деньги. Брутто намеренно не хранится: оно вычисляется из нетто и ставки,
+  // а хранимая копия рано или поздно разойдётся с расчётом. В Angebot суммы
+  // фиксируются снимком — там хранятся все три.
+  priceNetCents     Int?
+  vatRateBp         Int       @default(1900) // 19,00 % в базисных пунктах
+  priceApproved     Boolean   @default(false)
+  priceApprovedAt   DateTime? @db.Timestamptz(3)
+  priceApprovedById String?
+  priceApprovedBy   User?     @relation("PriceApprover", fields: [priceApprovedById], references: [id])
+
+  estHours    Decimal? @db.Decimal(5, 2) // ожидаемая длительность работ
+  estMonteure Int?
+  notes       String?
+
+  /// Чек-лист «что нужно уточнить» из главы 5.2:
+  /// { adresse, etage, lift, anschluesse, teile_geliefert } → boolean
+  checklist Json @default("{}")
+
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+
+  offers       Offer[]
+  appointments Appointment[]
+
+  @@index([status])
+  @@index([source])
+  @@index([customerId])
+  @@index([createdAt])
+}
+
+// ──────────────────────────── Angebote ──────────────────────────────────────
+
+/// Отправленное Angebot — документ. Его суммы и тексты замораживаются снимком:
+/// изменение прайса или реквизитов задним числом не должно менять то, что уже
+/// увидел клиент.
+model Offer {
+  id      String @id @default(cuid())
+  dealId  String
+  deal    Deal   @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  version Int // v1, v2, v3 — история изменений (глава 5.4)
+
+  language Lang        @default(DE)
+  status   OfferStatus @default(ENTWURF)
+
+  totalNetCents   Int
+  vatRateBp       Int
+  vatAmountCents  Int
+  totalGrossCents Int
+
+  // Обязательные блоки правила 9.2 — копия текста на момент создания.
+  warrantyText String
+  parkingText  String
+  scopeText    String
+
+  /// Готовый текст для отправки в WhatsApp (глава 5.4, кнопка «копировать»).
+  bodyText String
+
+  pdfKey String? // ключ файла в хранилище, см. src/lib/storage
+  sentAt DateTime? @db.Timestamptz(3)
+
+  // Публичная ссылка «Angebot annehmen». Согласие фиксируется с датой и IP.
+  acceptToken String?   @unique
+  acceptedAt  DateTime? @db.Timestamptz(3)
+  acceptedIp  String?
+  declinedAt  DateTime? @db.Timestamptz(3)
+
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+
+  items OfferItem[]
+
+  @@unique([dealId, version])
+  @@index([status])
+}
+
+model OfferItem {
+  id      String @id @default(cuid())
+  offerId String
+  offer   Offer  @relation(fields: [offerId], references: [id], onDelete: Cascade)
+
+  position    Int
+  description String
+
+  /// Количество — точный numeric, а не float: «2,5 часа» деньгами не является,
+  /// но округление в двоичной дроби всё равно испортит сумму.
+  qty            Decimal   @db.Decimal(10, 3)
+  unit           PriceUnit
+  unitPriceCents Int
+
+  /// Сумма позиции в центах. Округление half-up на позицию, затем суммирование —
+  /// один раз зафиксированное правило, см. src/lib/money.ts.
+  lineNetCents Int
+
+  @@unique([offerId, position])
+}
+
+/// Leistungskatalog — прайс фирмы. Заполняется владельцем через интерфейс.
+/// Ни одной цены в коде и в сидах нет.
+model ServiceCatalogItem {
+  id         String    @id @default(cuid())
+  name       String
+  unit       PriceUnit
+  priceCents Int
+  service    ServiceType?
+  active     Boolean   @default(true)
+  sort       Int       @default(0)
+  createdAt  DateTime  @default(now()) @db.Timestamptz(3)
+  updatedAt  DateTime  @updatedAt @db.Timestamptz(3)
+
+  @@index([active, sort])
+}
+
+// ─────────────────── Календарь и работа монтажника ──────────────────────────
+
+model Appointment {
+  id     String @id @default(cuid())
+  dealId String
+  deal   Deal   @relation(fields: [dealId], references: [id], onDelete: Cascade)
+
+  addressId String
+  address   Address @relation(fields: [addressId], references: [id])
+  teamId    String?
+  team      Team?   @relation(fields: [teamId], references: [id])
+
+  startAt DateTime @db.Timestamptz(3)
+  endAt   DateTime @db.Timestamptz(3)
+
+  status         AppointmentStatus @default(GEPLANT)
+  dispatcherNote String?
+
+  reminderSentAt DateTime? @db.Timestamptz(3) // задействуется автоматизациями Этапа 2
+
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+
+  assignees   AppointmentAssignee[]
+  photos      JobPhoto[]
+  timeEntries TimeEntry[]
+  handover    Handover?
+
+  @@index([startAt])
+  @@index([teamId, startAt])
+  @@index([dealId])
+}
+
+/// Поимённое назначение монтажников на выезд. В главе 7 ТЗ выезд связан только
+/// с бригадой, но состав в жизни собирается под заказ, а правило «Monteur видит
+/// только свои заказы» должно быть точной строкой в запросе, а не вычислением
+/// через членство в бригаде.
+model AppointmentAssignee {
+  appointmentId String
+  userId        String
+  appointment   Appointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([appointmentId, userId])
+  @@index([userId])
+}
+
+model TimeEntry {
+  id            String      @id @default(cuid())
+  appointmentId String
+  appointment   Appointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+  userId        String
+  user          User        @relation(fields: [userId], references: [id])
+
+  startAt DateTime @db.Timestamptz(3)
+  endAt   DateTime? @db.Timestamptz(3)
+  minutes Int? // считается сервером при остановке, не приходит от клиента
+
+  @@index([userId, startAt])
+  @@index([appointmentId])
+}
+
+model JobPhoto {
+  id            String      @id @default(cuid())
+  appointmentId String
+  appointment   Appointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+
+  kind       PhotoKind
+  storageKey String
+
+  uploadedById String
+  uploadedBy   User   @relation("PhotoUploader", fields: [uploadedById], references: [id])
+
+  /// Ключ, сгенерированный телефоном монтажника. Делает повторную отправку из
+  /// офлайн-очереди идемпотентной: при слабой связи один снимок уходит дважды.
+  clientKey String @unique
+
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+
+  @@index([appointmentId, kind])
+}
+
+/// Abnahmeprotokoll — протокол приёмки с подписью клиента (глава 5.6.5).
+model Handover {
+  id            String      @id @default(cuid())
+  appointmentId String      @unique
+  appointment   Appointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+
+  checklist    Json
+  remarks      String?
+  signatureKey String // подпись клиента, PNG в хранилище
+  photoConsent Boolean // согласие на фотофиксацию (глава 3 ТЗ)
+  pdfKey       String?
+  signedAt     DateTime @db.Timestamptz(3)
+}
+
+// ───────────────────────── Настройки и журнал ───────────────────────────────
+
+/// Таблица из одной строки. id всегда 1 — проверяется ограничением в миграции.
+model Settings {
+  id Int @id @default(1)
+
+  companyName   String @default("")
+  companyStreet String @default("")
+  companyZip    String @default("")
+  companyCity   String @default("")
+  companyEmail  String @default("")
+  companyPhone  String @default("")
+
+  taxNumber String? // Steuernummer
+  vatId     String? // USt-IdNr
+
+  taxMode          TaxMode @default(REGELBESTEUERUNG)
+  defaultVatRateBp Int     @default(1900)
+  hourlyRateCents  Int? // Stundensatz за одного монтажника
+
+  // Обязательные блоки Angebot (правило 9.2). Пустые до тех пор, пока владелец
+  // не сохранит их в настройках — намеренно: юридический текст от лица фирмы
+  // не должен появляться в базе без прочтения человеком.
+  warrantyText String @default("")
+  parkingText  String @default("")
+  scopeText    String @default("")
+
+  /// Минимальный зазор между выездами одной бригады. Заменяет проверку по
+  /// расстоянию: геокодинг — внешний сервис и отдельный вопрос по DSGVO.
+  travelBufferMinutes Int @default(30)
+
+  minPhotosBefore Int @default(2)
+  minPhotosAfter  Int @default(2)
+
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+}
+
+/// Журнал действий (глава 4 ТЗ). Только вставка: обновление и удаление
+/// заблокированы расширением Prisma Client в src/lib/db.ts и правами роли
+/// приложения в миграции.
+model ActivityLog {
+  id String @id @default(cuid())
+
+  entity   String // "Deal" | "Offer" | "Appointment" | "Settings" | "User"
+  entityId String
+
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id])
+
+  action String // "deal.price_set", "deal.status_changed", "offer.sent", ...
+
+  /// Изменения в виде { поле: [было, стало] }.
+  diff Json?
+
+  /// Нужен для фиксации согласия с Angebot по дате и IP (глава 5.4).
+  ip String?
+
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+
+  @@index([entity, entityId])
+  @@index([userId])
+  @@index([createdAt])
+}

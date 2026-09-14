@@ -1,0 +1,17 @@
+node_modules
+.next
+out
+next-env.d.ts
+*.tsbuildinfo
+
+# Секреты никогда не попадают в репозиторий — только .env.example
+.env
+.env.local
+.env.*.local
+
+# Локальное хранилище файлов (драйвер storage=local)
+/storage/*
+!/storage/.gitkeep
+
+# Локальный кластер PostgreSQL для разработки без Docker
+/.pgdata
