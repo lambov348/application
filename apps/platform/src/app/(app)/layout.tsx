@@ -17,6 +17,7 @@ export default async function AppLayout({
   const segment = pathname.split("/")[1] ?? "heute";
   const titles: Record<string, string> = {
     heute: t("heute"),
+    kunden: t("kunden"),
     einstellungen: t("benutzer"),
   };
 

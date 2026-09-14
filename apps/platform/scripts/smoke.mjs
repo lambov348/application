@@ -14,6 +14,10 @@
  * Учётные данные берутся из окружения и в репозиторий не попадают. Без них
  * проверки входа пропускаются, остальные выполняются.
  *
+ * ВНИМАНИЕ: проверки заводят тестового клиента с адресом. Запускать только на
+ * базе для разработки, никогда на рабочей. Тестовые клиенты узнаются по
+ * фамилии вида Smoke123456 и удаляются через архивирование в интерфейсе.
+ *
  * Важно про проверки текста: document.body.textContent захватывает и
  * содержимое <script>, куда Next кладёт весь словарь переводов, — проверка
  * по нему проходила бы всегда. Поэтому здесь везде innerText.
@@ -210,8 +214,97 @@ for (const [who, creds, entry, target] of [
   await ctx.close();
 }
 
-// ── 6. Скорость ─────────────────────────────────────────────────────────────
-console.log("\n6. Скорость");
+// ── 6. Клиенты: поиск находит номер при любом написании ─────────────────────
+console.log("\n6. Клиенты");
+if (!disponent) {
+  skip("работа с клиентами", "не задана SMOKE_DISPONENT");
+} else {
+  const ctx = await browser.newContext();
+  const page = await ctx.newPage();
+
+  await page.goto(`${BASE}/login`, { waitUntil: "networkidle" });
+  await page.fill("#email", disponent.email);
+  await page.fill("#password", disponent.password);
+  await submitOf(page, "#email").click();
+  await settle(page, 3500);
+
+  // Заводим клиента с номером в национальном написании.
+  const marker = `Smoke${Date.now().toString().slice(-6)}`;
+  await page.goto(`${BASE}/kunden/neu`, { waitUntil: "networkidle" });
+  await page.fill("#lastName", marker);
+  await page.fill("#firstName", "Test");
+  await page.fill("#phone", "0176 79892037");
+  await submitOf(page, "#lastName").click();
+  await settle(page, 3500);
+  check("клиент заведён", page.url().includes("/kunden/"), `(${page.url()})`);
+
+  const customerUrl = page.url();
+
+  // Адрес для проверки поиска по улице.
+  await page.locator("summary:has-text(\"Adresse hinzufügen\")").last().click();
+  await page.fill("#street-neu", `${marker}straße 7`);
+  await page.fill("#zip-neu", "10115");
+  await page.fill("#city-neu", "Berlin");
+  await submitOf(page, "#street-neu").click();
+  await settle(page, 3000);
+  check(
+    "адрес добавлен",
+    (await visibleText(page)).includes(`${marker}straße 7`),
+  );
+
+  // Один и тот же номер, записанный по-разному, должен находиться.
+  for (const [written, label] of [
+    ["0176 79892037", "как записали"],
+    ["+49 176 79892037", "международный формат"],
+    ["017679892037", "без пробелов"],
+    ["79892037", "хвост номера"],
+  ]) {
+    await page.goto(`${BASE}/kunden?q=${encodeURIComponent(written)}`, {
+      waitUntil: "networkidle",
+    });
+    check(`поиск по номеру (${label})`, (await visibleText(page)).includes(marker));
+  }
+
+  await page.goto(`${BASE}/kunden?q=${marker}`, { waitUntil: "networkidle" });
+  check("поиск по фамилии", (await visibleText(page)).includes(marker));
+
+  await page.goto(`${BASE}/kunden?q=${marker}stra`, { waitUntil: "networkidle" });
+  check("поиск по улице", (await visibleText(page)).includes(marker));
+
+  await page.goto(`${BASE}/kunden?q=ZZnichtvorhandenZZ`, { waitUntil: "networkidle" });
+  check("несуществующий запрос ничего не находит", (await visibleText(page)).includes("Nichts gefunden"));
+
+  // Диспетчер не должен видеть необратимое удаление данных: только владелец.
+  await page.goto(customerUrl, { waitUntil: "networkidle" });
+  check(
+    "диспетчеру недоступно удаление данных DSGVO",
+    !(await visibleText(page)).includes("Endgültig löschen"),
+  );
+  check("диспетчеру доступно архивирование", (await visibleText(page)).includes("archivieren"));
+
+  await ctx.close();
+}
+
+// ── 7. Монтажник не видит клиентов ──────────────────────────────────────────
+console.log("\n7. Клиенты закрыты от бригады");
+if (!monteur) {
+  skip("монтажник не видит клиентов", "не задана SMOKE_MONTEUR");
+} else {
+  const ctx = await browser.newContext();
+  const page = await ctx.newPage();
+  await page.goto(`${BASE}/m/anmelden`, { waitUntil: "networkidle" });
+  await page.fill("#email", monteur.email);
+  await page.fill("#password", monteur.password);
+  await submitOf(page, "#email").click();
+  await settle(page, 3500);
+
+  await page.goto(`${BASE}/kunden`, { waitUntil: "networkidle" });
+  check("монтажник не пущен в клиентов", !page.url().includes("/kunden"), `(${page.url()})`);
+  await ctx.close();
+}
+
+// ── 8. Скорость ─────────────────────────────────────────────────────────────
+console.log("\n8. Скорость");
 {
   const times = [];
   for (let i = 0; i < 10; i++) {

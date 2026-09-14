@@ -210,6 +210,10 @@ model Customer {
   company    String?
   email      String?
   phone      String?
+  /// Только цифры в международном виде: 0176/79892037 и +49 176 79892037 —
+  /// один и тот же номер, и поиск обязан находить клиента по любому
+  /// написанию. Заполняется приложением, см. src/lib/phone.ts.
+  phoneNormalized String?
   language   Lang         @default(DE)
   notes      String?
   tags       String[]     @default([])
@@ -227,7 +231,7 @@ model Customer {
 
   @@index([lastName])
   @@index([company])
-  @@index([phone])
+  @@index([phoneNormalized])
   @@index([email])
 }
 

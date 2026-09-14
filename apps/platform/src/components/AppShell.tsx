@@ -24,7 +24,7 @@ const NAV: NavItem[] = [
   { href: "/anfragen", icon: "▤", labelKey: "anfragen", roles: ["INHABER", "DISPONENT"], upcoming: true },
   { href: "/einsatzplan", icon: "▦", labelKey: "einsatzplan", roles: ["INHABER", "DISPONENT"], upcoming: true },
   { href: "/angebote", icon: "€", labelKey: "angebote", roles: ["INHABER", "DISPONENT"], upcoming: true },
-  { href: "/kunden", icon: "☷", labelKey: "kunden", roles: ["INHABER", "DISPONENT"], upcoming: true },
+  { href: "/kunden", icon: "☷", labelKey: "kunden", roles: ["INHABER", "DISPONENT"] },
   { href: "/m", icon: "▣", labelKey: "monteur", roles: ["INHABER", "DISPONENT", "MONTEUR"] },
   { href: "/einstellungen/benutzer", icon: "⚙", labelKey: "benutzer", roles: ["INHABER"] },
 ];
