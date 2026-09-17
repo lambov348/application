@@ -6,6 +6,10 @@ import { formatCents, formatVatRate, grossCents } from "@/lib/money";
 import { formatDateTime } from "@/lib/datetime";
 import { formatPhone } from "@/lib/phone";
 import { MoveForm } from "../MoveForm";
+import { PlanForm } from "./PlanForm";
+import { listTeams, assignableUsers } from "@/server/queries/teams";
+import { appointmentsOfDeal } from "@/server/queries/appointments";
+import { toLocalInputValue } from "@/lib/datetime";
 import { PriceForm } from "./PriceForm";
 import { DealDetailsForm, ChecklistForm, FirstResponseForm } from "./DealForms";
 import { Alert } from "@/components/ui/alert";
@@ -23,7 +27,18 @@ export default async function DealPage({
   if (!deal) notFound();
 
   const t = await getTranslations("deals");
-  const activity = await getDealActivity(id);
+  const tPlan = await getTranslations("plan");
+  const [activity, teams, members, appointments] = await Promise.all([
+    getDealActivity(id),
+    listTeams(),
+    assignableUsers(),
+    appointmentsOfDeal(id),
+  ]);
+
+  // Значение по умолчанию: завтра 08:00–12:00 по Берлину.
+  const tomorrow = new Date(Date.now() + 24 * 60 * 60_000);
+  const defaultStart = `${toLocalInputValue(tomorrow).slice(0, 10)}T08:00`;
+  const defaultEnd = `${toLocalInputValue(tomorrow).slice(0, 10)}T12:00`;
 
   // Поля цены приходят из выборки только тем ролям, которым цена разрешена.
   const price = deal as typeof deal & {
@@ -141,6 +156,62 @@ export default async function DealPage({
           )}
         </div>
       </div>
+
+      {/* ── Выезды ─────────────────────────────────────────────────── */}
+      <section className="mb-5">
+        <h3 className="mb-2 text-sm font-semibold uppercase">{tPlan("title")}</h3>
+        <div className="border-linie bg-blatt overflow-hidden rounded-[3px] border">
+          {appointments.length === 0 && (
+            <p className="text-text-2 px-4 py-3 text-sm">{tPlan("noAppointments")}</p>
+          )}
+
+          {appointments.map((a) => (
+            <details key={a.id}>
+              <summary className="hover:bg-beton/60 cursor-pointer px-4 py-2.5 text-sm">
+                <b>
+                  {formatDateTime(a.startAt)} – {formatDateTime(a.endAt).slice(-5)}
+                </b>
+                <span className="text-text-2 ml-2 text-xs">
+                  {a.teamName ?? tPlan("noTeam")} · {tPlan(`statuses.${a.status}`)}
+                  {a.assignees.length > 0 &&
+                    ` · ${a.assignees.map((m) => m.name).join(", ")}`}
+                </span>
+              </summary>
+              <PlanForm
+                dealId={deal.id}
+                teams={teams.map((x) => ({ id: x.id, name: x.name }))}
+                members={members.map((m) => ({ id: m.id, name: m.name }))}
+                defaultStart={defaultStart}
+                defaultEnd={defaultEnd}
+                appointment={{
+                  id: a.id,
+                  startLocal: toLocalInputValue(a.startAt),
+                  endLocal: toLocalInputValue(a.endAt),
+                  teamId: a.teamId,
+                  status: a.status,
+                  dispatcherNote: a.dispatcherNote,
+                  assigneeIds: a.assignees.map((m) => m.id),
+                }}
+              />
+            </details>
+          ))}
+
+          <details>
+            <summary className="text-blau hover:bg-beton/60 cursor-pointer px-4 py-2.5 text-sm font-semibold">
+              + {tPlan("plan")}
+            </summary>
+            <div className="border-linie border-t p-4">
+              <PlanForm
+                dealId={deal.id}
+                teams={teams.map((x) => ({ id: x.id, name: x.name }))}
+                members={members.map((m) => ({ id: m.id, name: m.name }))}
+                defaultStart={defaultStart}
+                defaultEnd={defaultEnd}
+              />
+            </div>
+          </details>
+        </div>
+      </section>
 
       <div className="mb-5">
         <DealDetailsForm

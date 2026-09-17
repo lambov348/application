@@ -13,13 +13,18 @@ export default async function AppLayout({
   const pathname = (await headers()).get("x-pathname") ?? "/heute";
   const t = await getTranslations("nav");
 
-  // Заголовок страницы подбираем по первому сегменту пути.
-  const segment = pathname.split("/")[1] ?? "heute";
+  // Заголовок подбираем по пути. Под einstellungen лежит несколько разделов,
+  // поэтому смотрим и на второй сегмент.
+  const parts = pathname.split("?")[0]!.split("/").filter(Boolean);
+  const segment =
+    parts[0] === "einstellungen" ? (parts[1] ?? "benutzer") : (parts[0] ?? "heute");
   const titles: Record<string, string> = {
     heute: t("heute"),
     kunden: t("kunden"),
     anfragen: t("anfragen"),
-    einstellungen: t("benutzer"),
+    einsatzplan: t("einsatzplan"),
+    benutzer: t("benutzer"),
+    teams: t("teams"),
   };
 
   return (

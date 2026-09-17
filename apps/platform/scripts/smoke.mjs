@@ -446,8 +446,122 @@ if (!disponent || !inhaber) {
   await ownCtx.close();
 }
 
-// ── 9. Скорость ─────────────────────────────────────────────────────────────
-console.log("\n9. Скорость");
+// ── 9. Календарь: бригады, планирование, конфликты ──────────────────────────
+console.log("\n9. Календарь и конфликты");
+if (!inhaber) {
+  skip("планирование выездов", "нужна SMOKE_INHABER");
+} else {
+  const ctx = await browser.newContext();
+  const page = await ctx.newPage();
+
+  await page.goto(`${BASE}/login`, { waitUntil: "networkidle" });
+  await page.fill("#email", inhaber.email);
+  await page.fill("#password", inhaber.password);
+  await submitOf(page, "#email").click();
+  await settle(page, 2500);
+  await page.fill("#password", inhaber.password);
+  await page.fill("#totp", totpNow(inhaber.totpSecret));
+  await submitOf(page, "#totp").click();
+  await settle(page, 3500);
+
+  // ── Бригада ─────────────────────────────────────────────────────────────
+  const teamName = `Kolonne${Date.now().toString().slice(-5)}`;
+  await page.goto(`${BASE}/einstellungen/teams`, { waitUntil: "networkidle" });
+  await page.fill("#name-neu", teamName);
+  await submitOf(page, "#name-neu").click();
+  await settle(page, 3000);
+  check("бригада создана", (await visibleText(page)).includes(teamName));
+
+  // Одноимённую вторую бригаду заводить нельзя.
+  await page.fill("#name-neu", teamName);
+  await submitOf(page, "#name-neu").click();
+  await settle(page, 2500);
+  check(
+    "дубль названия бригады отвергнут",
+    (await visibleText(page)).includes("existiert bereits"),
+  );
+
+  // ── Клиент с адресом и заявка ───────────────────────────────────────────
+  const marker = `Plan${Date.now().toString().slice(-6)}`;
+  await page.goto(`${BASE}/kunden/neu`, { waitUntil: "networkidle" });
+  await page.fill("#lastName", marker);
+  await submitOf(page, "#lastName").click();
+  await settle(page, 3500);
+
+  await page.locator('summary:has-text("Adresse hinzufügen")').last().click();
+  await page.fill("#street-neu", `${marker}weg 3`);
+  await page.fill("#zip-neu", "10115");
+  await page.fill("#city-neu", "Berlin");
+  await submitOf(page, "#street-neu").click();
+  await settle(page, 3000);
+
+  await page.goto(`${BASE}/anfragen/neu`, { waitUntil: "networkidle" });
+  await page.selectOption("#customerId", { label: marker });
+  await page.fill("#title", `${marker} Montage`);
+  await page.selectOption("#source", "EMPFEHLUNG");
+  await submitOf(page, "#title").click();
+  await settle(page, 3500);
+  const dealUrl = page.url();
+
+  // Адрес у заявки — без него сработает правило 9.3.
+  await page.selectOption("#addressId", { index: 1 });
+  await page.locator('form:has(#title) button[type="submit"]').click();
+  await settle(page, 3000);
+
+  // ── Планирование выезда ─────────────────────────────────────────────────
+  const openPlan = async () => {
+    await page.goto(dealUrl, { waitUntil: "networkidle" });
+    await page.locator('summary:has-text("Termin planen")').last().click();
+    await page.waitForTimeout(400);
+  };
+
+  await openPlan();
+  await page.fill("#start-neu", "2027-03-01T08:00");
+  await page.fill("#end-neu", "2027-03-01T11:00");
+  await page.selectOption("#team-neu", { label: teamName });
+  await submitOf(page, "#start-neu").click();
+  await settle(page, 3500);
+  check("выезд запланирован", (await visibleText(page)).includes("08:00"));
+
+  // Заявка должна была переехать в колонку «Termin geplant».
+  check(
+    "заявка переведена в «Termin geplant»",
+    (await visibleText(page)).includes("Termin geplant"),
+  );
+
+  // ── Конфликт: та же бригада в то же время ───────────────────────────────
+  await openPlan();
+  await page.fill("#start-neu", "2027-03-01T09:00");
+  await page.fill("#end-neu", "2027-03-01T12:00");
+  await page.selectOption("#team-neu", { label: teamName });
+  await submitOf(page, "#start-neu").click();
+  await settle(page, 3000);
+  const overlapText = await visibleText(page);
+  check("конфликт наложения показан", overlapText.includes("Konflikt im Einsatzplan"));
+  check("названа занятая бригада", overlapText.includes("gleichen Zeit"));
+  check(
+    "предложено подтвердить",
+    (await page.locator('input[name="force"]').count()) > 0,
+  );
+
+  // ── Календарь показывает выезд ──────────────────────────────────────────
+  await page.goto(`${BASE}/einsatzplan?datum=2027-03-01&ansicht=woche`, {
+    waitUntil: "networkidle",
+  });
+  const calText = await visibleText(page);
+  check("выезд виден в календаре", calText.includes(marker));
+  check("бригада — строка календаря", calText.includes(teamName));
+
+  await page.goto(`${BASE}/einsatzplan?datum=2027-03-01&ansicht=tag`, {
+    waitUntil: "networkidle",
+  });
+  check("вид «день» работает", (await visibleText(page)).includes(marker));
+
+  await ctx.close();
+}
+
+// ── 10. Скорость ─────────────────────────────────────────────────────────────
+console.log("\n10. Скорость");
 {
   const times = [];
   for (let i = 0; i < 10; i++) {

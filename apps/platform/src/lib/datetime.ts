@@ -122,3 +122,74 @@ export function elapsedSince(date: Date, locale: Locale = "de"): string {
   if (minutes < 60 * 24) return rtf.format(-Math.floor(minutes / 60), "hour");
   return rtf.format(-Math.floor(minutes / (60 * 24)), "day");
 }
+
+// ─── Границы суток и недели в берлинском поясе ──────────────────────────────
+
+/**
+ * Дата вида 2026-10-05 в берлинском поясе — тот же формат, что у <input
+ * type="date">. Берётся из Intl, а не из методов Date: методы Date работают
+ * в поясе сервера, а сервер стоит в UTC.
+ */
+export function berlinDateIso(date: Date = new Date()): string {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: DISPLAY_TIMEZONE }).format(
+    date,
+  );
+}
+
+/**
+ * Момент по UTC, соответствующий берлинской полуночи указанного дня.
+ *
+ * Нужен календарю: сетка строится по берлинским суткам, а в базе всё лежит
+ * в UTC. Зимой это 23:00 предыдущего дня по UTC, летом 22:00.
+ */
+export function berlinDayStart(dateIso: string): Date {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateIso.trim());
+  if (!match) throw new Error(`Ожидалась дата вида ГГГГ-ММ-ДД, получено ${dateIso}`);
+  const [, y, m, d] = match.map(Number) as unknown as number[];
+
+  const asUtc = new Date(Date.UTC(y!, m! - 1, d!, 0, 0));
+  const offset = berlinOffsetMinutes(asUtc);
+  const corrected = new Date(asUtc.getTime() - offset * 60_000);
+
+  // Рядом с переводом часов смещение могло измениться — уточняем один раз.
+  const offsetAfter = berlinOffsetMinutes(corrected);
+  if (offsetAfter !== offset) {
+    return new Date(asUtc.getTime() - offsetAfter * 60_000);
+  }
+  return corrected;
+}
+
+/** Понедельник недели, в которую попадает дата. Неделя начинается с понедельника. */
+export function berlinWeekStart(dateIso: string): Date {
+  const dayStart = berlinDayStart(dateIso);
+
+  const weekdayShort = new Intl.DateTimeFormat("en-US", {
+    timeZone: DISPLAY_TIMEZONE,
+    weekday: "short",
+  }).format(dayStart);
+
+  const order = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+  const index = order.indexOf(weekdayShort);
+  if (index < 0) throw new Error(`Неизвестный день недели: ${weekdayShort}`);
+
+  // Вычитаем дни через календарную дату, а не через миллисекунды: в неделю
+  // с переводом часов сутки длятся 23 или 25 часов.
+  const targetIso = berlinDateIso(
+    new Date(dayStart.getTime() - index * 24 * 60 * 60_000 + 12 * 60 * 60_000),
+  );
+  return berlinDayStart(targetIso);
+}
+
+/** Следующие n берлинских суток начиная с указанного дня. */
+export function berlinDays(startIso: string, count: number): Date[] {
+  const days: Date[] = [];
+  let iso = startIso;
+  for (let i = 0; i < count; i++) {
+    const start = berlinDayStart(iso);
+    days.push(start);
+    // Полдень следующих суток гарантированно попадает в нужный день даже
+    // в ночь перевода часов.
+    iso = berlinDateIso(new Date(start.getTime() + 36 * 60 * 60_000));
+  }
+  return days;
+}

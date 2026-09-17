@@ -3,6 +3,10 @@ import {
   formatDateTime,
   toLocalInputValue,
   fromLocalInputValue,
+  berlinDateIso,
+  berlinDayStart,
+  berlinWeekStart,
+  berlinDays,
 } from "./datetime";
 
 describe("показ времени в Берлине", () => {
@@ -76,5 +80,55 @@ describe("поле ввода даты и времени", () => {
     for (const bad of ["", "завтра", "2026-13-01T09:00x", "01.10.2026 09:00"]) {
       expect(fromLocalInputValue(bad), bad).toBeNull();
     }
+  });
+});
+
+describe("границы суток и недели в Берлине", () => {
+  it("берлинская полночь зимой — 23:00 UTC предыдущего дня", () => {
+    expect(berlinDayStart("2026-01-15").toISOString()).toBe(
+      "2026-01-14T23:00:00.000Z",
+    );
+  });
+
+  it("берлинская полночь летом — 22:00 UTC предыдущего дня", () => {
+    expect(berlinDayStart("2026-07-15").toISOString()).toBe(
+      "2026-07-14T22:00:00.000Z",
+    );
+  });
+
+  it("находит понедельник недели", () => {
+    // 2026-10-07 — среда, понедельник её недели 2026-10-05.
+    expect(berlinDateIso(berlinWeekStart("2026-10-07"))).toBe("2026-10-05");
+    // Сам понедельник остаётся собой.
+    expect(berlinDateIso(berlinWeekStart("2026-10-05"))).toBe("2026-10-05");
+    // Воскресенье относится к неделе, начавшейся в предыдущий понедельник.
+    expect(berlinDateIso(berlinWeekStart("2026-10-11"))).toBe("2026-10-05");
+  });
+
+  it("правильно считает неделю с переводом часов", () => {
+    // Часы переводят в ночь на воскресенье 2026-03-29: в этой неделе
+    // одни сутки длятся 23 часа, и счёт в миллисекундах промахнулся бы.
+    expect(berlinDateIso(berlinWeekStart("2026-03-29"))).toBe("2026-03-23");
+    expect(berlinDateIso(berlinWeekStart("2026-10-25"))).toBe("2026-10-19");
+  });
+
+  it("выдаёт семь подряд идущих дней через перевод часов", () => {
+    const days = berlinDays("2026-03-23", 7).map(berlinDateIso);
+    expect(days).toEqual([
+      "2026-03-23", "2026-03-24", "2026-03-25", "2026-03-26",
+      "2026-03-27", "2026-03-28", "2026-03-29",
+    ]);
+  });
+
+  it("выдаёт семь подряд идущих дней через переход на зимнее время", () => {
+    const days = berlinDays("2026-10-19", 7).map(berlinDateIso);
+    expect(days).toEqual([
+      "2026-10-19", "2026-10-20", "2026-10-21", "2026-10-22",
+      "2026-10-23", "2026-10-24", "2026-10-25",
+    ]);
+  });
+
+  it("отвергает мусор вместо даты", () => {
+    expect(() => berlinDayStart("завтра")).toThrow();
   });
 });

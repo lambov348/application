@@ -22,10 +22,11 @@ type NavItem = {
 const NAV: NavItem[] = [
   { href: "/heute", icon: "◧", labelKey: "heute", roles: ["INHABER", "DISPONENT"] },
   { href: "/anfragen", icon: "▤", labelKey: "anfragen", roles: ["INHABER", "DISPONENT"] },
-  { href: "/einsatzplan", icon: "▦", labelKey: "einsatzplan", roles: ["INHABER", "DISPONENT"], upcoming: true },
+  { href: "/einsatzplan", icon: "▦", labelKey: "einsatzplan", roles: ["INHABER", "DISPONENT"] },
   { href: "/angebote", icon: "€", labelKey: "angebote", roles: ["INHABER", "DISPONENT"], upcoming: true },
   { href: "/kunden", icon: "☷", labelKey: "kunden", roles: ["INHABER", "DISPONENT"] },
   { href: "/m", icon: "▣", labelKey: "monteur", roles: ["INHABER", "DISPONENT", "MONTEUR"] },
+  { href: "/einstellungen/teams", icon: "◫", labelKey: "teams", roles: ["INHABER"] },
   { href: "/einstellungen/benutzer", icon: "⚙", labelKey: "benutzer", roles: ["INHABER"] },
 ];
 

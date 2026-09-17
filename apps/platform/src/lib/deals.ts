@@ -5,7 +5,13 @@
  * правила, и клиентские формы; если сюда попадёт что-то серверное, сборка
  * потянет в браузер драйвер PostgreSQL — так уже было.
  */
-import type { DealStatus, LostReason, ServiceType, LeadSource } from "@prisma/client";
+import type {
+  AppointmentStatus,
+  DealStatus,
+  LeadSource,
+  LostReason,
+  ServiceType,
+} from "@prisma/client";
 
 /** Колонки доски в порядке из главы 5.2 ТЗ. */
 export const BOARD_STATUSES: DealStatus[] = [
@@ -68,3 +74,35 @@ export const CHECKLIST_KEYS = [
 ] as const;
 
 export type ChecklistKey = (typeof CHECKLIST_KEYS)[number];
+
+/**
+ * Порядок статусов выезда: geplant → unterwegs → angekommen → in Arbeit →
+ * fertig (объединение глав 5.3 и 5.6 ТЗ). Отмена стоит отдельно.
+ */
+export const APPOINTMENT_FLOW: AppointmentStatus[] = [
+  "GEPLANT",
+  "UNTERWEGS",
+  "ANGEKOMMEN",
+  "IN_ARBEIT",
+  "FERTIG",
+];
+
+export const APPOINTMENT_STATUSES: AppointmentStatus[] = [
+  ...APPOINTMENT_FLOW,
+  "ABGESAGT",
+];
+
+/** Цвет карточки в календаре по виду работ (глава 5.3: цветовая кодировка). */
+export const SERVICE_COLORS: Record<string, string> = {
+  KUECHENMONTAGE: "#1A4F7A",
+  MOEBELMONTAGE: "#2D6A4F",
+  DEMONTAGE: "#A63A2B",
+  TRANSPORT: "#F0B429",
+  UMZUG: "#6B4E9B",
+  ENTSORGUNG: "#646C6F",
+  REPARATUR: "#8A6D3B",
+  GERAETEANSCHLUSS: "#2A6B7C",
+  ARBEITSPLATTE: "#7A4B2A",
+};
+
+export const DEFAULT_SERVICE_COLOR = "#2A3034";

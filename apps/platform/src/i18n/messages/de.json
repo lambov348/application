@@ -19,7 +19,8 @@
       "DISPONENT": "Disponent",
       "MONTEUR": "Monteur",
       "BUCHHALTUNG": "Buchhaltung"
-    }
+    },
+    "teams": "Kolonnen"
   },
   "login": {
     "subtitle": "Anmeldung für Mitarbeiter",
@@ -258,6 +259,16 @@
         "price_set": "Preis geändert",
         "first_response": "Erstantwort vermerkt",
         "checklist_changed": "Checkliste geändert"
+      },
+      "appointment": {
+        "created": "Termin geplant",
+        "updated": "Termin geändert",
+        "status_changed": "Termin-Status geändert",
+        "cancelled": "Termin abgesagt"
+      },
+      "team": {
+        "created": "Kolonne angelegt",
+        "updated": "Kolonne geändert"
       }
     },
     "status": "Status",
@@ -307,5 +318,70 @@
     "activity": "Aktivität",
     "noActivity": "Noch keine Einträge.",
     "systemActor": "System"
+  },
+  "plan": {
+    "title": "Termine",
+    "noAppointments": "Noch kein Termin geplant.",
+    "plan": "Termin planen",
+    "save": "Speichern",
+    "cancel": "Termin absagen",
+    "start": "Beginn",
+    "end": "Ende",
+    "timeHint": "Ortszeit Berlin",
+    "team": "Kolonne",
+    "noTeam": "ohne Kolonne",
+    "teamHint": "Ohne Kolonne erscheint der Termin in der Liste „noch zuzuteilen“",
+    "assignees": "Monteure",
+    "assigneesHint": "Wer tatsächlich hinfährt. Davon hängt ab, wer den Termin in seiner App sieht.",
+    "note": "Hinweis für die Monteure",
+    "noteHint": "Parken, Schlüssel, Ansprechpartner",
+    "status": "Status",
+    "setStatus": "Status setzen",
+    "statuses": {
+      "GEPLANT": "geplant",
+      "UNTERWEGS": "unterwegs",
+      "ANGEKOMMEN": "angekommen",
+      "IN_ARBEIT": "in Arbeit",
+      "FERTIG": "fertig",
+      "ABGESAGT": "abgesagt"
+    },
+    "conflictTitle": "Konflikt im Einsatzplan",
+    "conflictOverlap": "Die Kolonne hat zur gleichen Zeit Auftrag #{number} in {city}.",
+    "conflictTravel": "Bis Auftrag #{number} in {city} fehlen {minutes} Minuten für die Fahrt.",
+    "planAnyway": "Trotzdem planen",
+    "today": "Heute",
+    "views": {
+      "tag": "Tag",
+      "woche": "Woche"
+    },
+    "noTeams": "Es gibt noch keine Kolonnen.",
+    "createTeam": "Kolonne anlegen",
+    "unassigned": "Noch zuzuteilen",
+    "planHint": "Termine werden in der Anfrage geplant: Anfrage öffnen und „Termin planen“."
+  },
+  "teams": {
+    "intro": "Kolonnen sind die Zeilen im Einsatzplan. „Team 1“, „Team 2“, „Ivan“ — wer allein fährt, ist auch eine Kolonne.",
+    "createTitle": "Neue Kolonne",
+    "empty": "Noch keine Kolonne angelegt.",
+    "name": "Name",
+    "nameHint": "So steht es im Einsatzplan",
+    "color": "Farbe",
+    "colorHint": "Markierung im Plan",
+    "sort": "Reihenfolge",
+    "sortHint": "Kleinere Zahl steht oben",
+    "members": "Feste Mitglieder",
+    "noMembers": "ohne Mitglieder",
+    "active": "Kolonne aktiv",
+    "create": "Anlegen",
+    "save": "Speichern",
+    "deactivate": "Deaktivieren",
+    "activate": "Aktivieren",
+    "deactivateHint": "Gelöscht wird nichts: vergangene Termine verweisen auf die Kolonne.",
+    "roles": {
+      "INHABER": "Inhaber",
+      "DISPONENT": "Disponent",
+      "MONTEUR": "Monteur",
+      "BUCHHALTUNG": "Buchhaltung"
+    }
   }
 }
