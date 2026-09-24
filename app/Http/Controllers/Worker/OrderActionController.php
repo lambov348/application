@@ -44,10 +44,10 @@ class OrderActionController extends Controller
         return back()->with('success', __('app.worker.work_stopped'));
     }
 
-    public function complete(Order $order, WorkerOrderActions $actions): RedirectResponse
+    public function complete(Request $request, Order $order, WorkerOrderActions $actions): RedirectResponse
     {
         Gate::authorize('work', $order);
-        $actions->complete($order);
+        $actions->complete($order, $request->user());
 
         return redirect()->route('worker.orders.index')->with('success', __('app.worker.completed', ['number' => $order->number]));
     }

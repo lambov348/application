@@ -334,4 +334,28 @@ return [
         'text' => 'Bitte Internetverbindung prüfen und erneut versuchen. Gespeicherte Daten gehen nicht verloren.',
         'retry' => 'Erneut versuchen',
     ],
+
+    'push' => [
+        'title' => 'Benachrichtigungen',
+        'enable' => 'Benachrichtigungen einschalten',
+        'disable' => 'Auf diesem Gerät ausschalten',
+        'test' => 'Test-Benachrichtigung senden',
+        'enabled' => 'Benachrichtigungen sind auf diesem Gerät eingeschaltet.',
+        'test_sent' => 'Test gesendet. Er sollte in wenigen Sekunden ankommen.',
+        'denied' => 'Benachrichtigungen sind in den Browser-Einstellungen für diese Seite blockiert.',
+        'unsupported' => 'Dieser Browser unterstützt keine Benachrichtigungen.',
+        'ios_install_first' => 'Auf dem iPhone zuerst die App auf dem Home-Bildschirm installieren (siehe oben) und von dort öffnen.',
+        'not_configured' => 'Benachrichtigungen sind auf dem Server noch nicht eingerichtet.',
+    ],
+
+    'calendar' => [
+        'title' => 'Kalender',
+        'hint' => 'Diesen persönlichen Link einmal im Kalender des Handys hinzufügen; Aufträge erscheinen dann automatisch. Den Link nicht weitergeben.',
+        'hint_owner' => 'Alle Aufträge der Firma. Den Link nicht weitergeben.',
+        'subscribe' => 'Zum Kalender hinzufügen',
+        'copy' => 'Link kopieren',
+        'copied' => 'Link kopiert',
+        'regenerate' => 'Neuer Link',
+        'confirm_regenerate' => 'Neuen Link erstellen? Der alte funktioniert dann nicht mehr und muss im Kalender ersetzt werden.',
+    ],
 ];

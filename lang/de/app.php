@@ -42,4 +42,23 @@ return [
     'comments' => [
         'sent' => 'Bemerkung gesendet.',
     ],
+    'push' => [
+        'order_assigned' => ['title' => 'Neuer Auftrag :number', 'body' => ':title · :when · :address'],
+        'order_unassigned' => ['title' => 'Von Auftrag :number entfernt', 'body' => ':title · :when'],
+        'order_changed' => ['title' => 'Auftrag :number geändert', 'body' => 'Jetzt: :when · :address'],
+        'worker_declined' => ['title' => ':worker hat Auftrag :number abgelehnt', 'body' => ':title · :when'],
+        'order_completed' => ['title' => 'Auftrag :number erledigt', 'body' => ':worker · :title'],
+        'new_comment' => ['title' => 'Bemerkung zu :number von :worker', 'body' => ':text'],
+        'shift_open' => ['title' => 'Ihre Schicht läuft noch', 'body' => 'Bitte beenden Sie Ihre Schicht. Um 23:59 wird sie automatisch geschlossen und vom Büro geprüft.'],
+        'test' => ['title' => 'MöbelStock24', 'body' => 'Benachrichtigungen funktionieren auf diesem Gerät.'],
+    ],
+    'calendar' => [
+        'client' => 'Kunde',
+        'workers' => 'Team',
+        'floor' => 'Etage :floor',
+        'elevator_yes' => 'Aufzug',
+        'elevator_no' => 'Kein Aufzug',
+        'parking' => 'Parken: :note',
+        'regenerated' => 'Neuer Kalender-Link erstellt. Der alte Link funktioniert nicht mehr.',
+    ],
 ];

@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Services\Push\PushSender;
+use App\Services\Push\WebPushSender;
 use App\Support\CurrentCompany;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\URL;
@@ -13,6 +15,7 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->scoped(CurrentCompany::class);
+        $this->app->bind(PushSender::class, WebPushSender::class);
     }
 
     public function boot(): void

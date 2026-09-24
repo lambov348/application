@@ -22,6 +22,7 @@ class Shift extends Model
             'ended_at' => 'datetime',
             'auto_closed' => 'boolean',
             'needs_review' => 'boolean',
+            'reminded_at' => 'datetime',
         ];
     }
 

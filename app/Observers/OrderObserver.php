@@ -2,7 +2,9 @@
 
 namespace App\Observers;
 
+use App\Enums\OrderStatus;
 use App\Models\Order;
+use App\Services\Notifier;
 use Illuminate\Support\Facades\Auth;
 
 /**
@@ -11,6 +13,8 @@ use Illuminate\Support\Facades\Auth;
 class OrderObserver
 {
     /** Fields that are covered by the status event or are purely technical. */
+    private const NOTIFY_WORKERS = ['date', 'start_time', 'end_time', 'address_id'];
+
     private const IGNORED = ['updated_at', 'status', 'reject_reason', 'completed_at', 'paid_at'];
 
     public function created(Order $order): void
@@ -37,6 +41,12 @@ class OrderObserver
 
         if ($changes !== []) {
             $this->log($order, 'updated', ['changes' => $changes]);
+        }
+
+        // Workers must know when the appointment or the place changes.
+        $open = in_array($order->status, [OrderStatus::New, OrderStatus::Scheduled, OrderStatus::Confirmed, OrderStatus::InProgress], true);
+        if ($open && array_intersect(array_keys($changes), self::NOTIFY_WORKERS) !== []) {
+            app(Notifier::class)->workersOf($order, 'order_changed');
         }
     }
 

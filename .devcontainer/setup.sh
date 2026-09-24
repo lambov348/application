@@ -19,6 +19,7 @@ npm ci
 npm run build
 
 grep -q '^APP_KEY=base64' .env || php artisan key:generate --force
+php artisan webpush:vapid --write
 
 # Wait for PostgreSQL to start
 until pg_isready -h 127.0.0.1 -U moebel >/dev/null 2>&1; do sleep 1; done

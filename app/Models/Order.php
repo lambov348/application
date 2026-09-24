@@ -7,6 +7,7 @@ use App\Enums\PaymentStatus;
 use App\Models\Concerns\BelongsToCompany;
 use App\Observers\OrderObserver;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -35,6 +36,22 @@ class Order extends Model
             'paid_at' => 'datetime',
             'completed_at' => 'datetime',
         ];
+    }
+
+    /** Times are stored as HH:MM:SS; "09:00" from a form must not count as a change. */
+    protected function startTime(): Attribute
+    {
+        return Attribute::set(fn (?string $value) => self::normalizeTime($value));
+    }
+
+    protected function endTime(): Attribute
+    {
+        return Attribute::set(fn (?string $value) => self::normalizeTime($value));
+    }
+
+    private static function normalizeTime(?string $value): ?string
+    {
+        return $value === null || $value === '' ? null : date('H:i:s', strtotime($value));
     }
 
     public function client(): BelongsTo

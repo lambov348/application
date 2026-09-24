@@ -42,4 +42,23 @@ return [
     'comments' => [
         'sent' => 'Замечание отправлено.',
     ],
+    'push' => [
+        'order_assigned' => ['title' => 'Новый заказ :number', 'body' => ':title · :when · :address'],
+        'order_unassigned' => ['title' => 'Вас сняли с заказа :number', 'body' => ':title · :when'],
+        'order_changed' => ['title' => 'Заказ :number изменён', 'body' => 'Теперь: :when · :address'],
+        'worker_declined' => ['title' => ':worker отказался от заказа :number', 'body' => ':title · :when'],
+        'order_completed' => ['title' => 'Заказ :number выполнен', 'body' => ':worker · :title'],
+        'new_comment' => ['title' => 'Замечание по :number от :worker', 'body' => ':text'],
+        'shift_open' => ['title' => 'Смена ещё не закрыта', 'body' => 'Закончите смену, пожалуйста. В 23:59 она закроется сама и офис её проверит.'],
+        'test' => ['title' => 'MöbelStock24', 'body' => 'Уведомления на этом устройстве работают.'],
+    ],
+    'calendar' => [
+        'client' => 'Клиент',
+        'workers' => 'Команда',
+        'floor' => 'Этаж :floor',
+        'elevator_yes' => 'Есть лифт',
+        'elevator_no' => 'Без лифта',
+        'parking' => 'Парковка: :note',
+        'regenerated' => 'Создана новая ссылка на календарь. Старая больше не работает.',
+    ],
 ];

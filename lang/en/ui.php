@@ -334,4 +334,28 @@ return [
         'text' => 'Check your internet connection and try again. Nothing you saved is lost.',
         'retry' => 'Try again',
     ],
+
+    'push' => [
+        'title' => 'Notifications',
+        'enable' => 'Turn on notifications',
+        'disable' => 'Turn off on this device',
+        'test' => 'Send a test notification',
+        'enabled' => 'Notifications are on for this device.',
+        'test_sent' => 'Test sent. It should arrive in a few seconds.',
+        'denied' => 'Notifications are blocked in the browser settings for this site.',
+        'unsupported' => 'This browser does not support notifications.',
+        'ios_install_first' => 'On iPhone, install the app on the home screen first (see above), then open it from there.',
+        'not_configured' => 'Notifications are not set up on the server yet.',
+    ],
+
+    'calendar' => [
+        'title' => 'Calendar',
+        'hint' => 'Add this personal link to the calendar on your phone once; orders then appear there automatically. Do not share the link.',
+        'hint_owner' => 'All orders of the company. Do not share the link.',
+        'subscribe' => 'Add to calendar',
+        'copy' => 'Copy link',
+        'copied' => 'Link copied',
+        'regenerate' => 'New link',
+        'confirm_regenerate' => 'Create a new link? The old one stops working and must be replaced in the calendar.',
+    ],
 ];

@@ -175,3 +175,15 @@ test('deactivated workers cannot be assigned to new orders', function () {
         'client_id' => client($this->company)->id, 'title' => 'X', 'payment_status' => 'unpaid', 'worker_ids' => [$inactive->id],
     ])->assertSessionHasErrors('worker_ids.0');
 });
+
+test('saving an order without changes writes no history entry', function () {
+    $order = order($this->company, status: OrderStatus::Scheduled);
+
+    $this->put("/admin/orders/{$order->id}", [
+        'client_id' => $order->client_id, 'title' => $order->title, 'description' => $order->description,
+        'price' => number_format($order->price_cents / 100, 2, '.', ''), 'payment_status' => 'unpaid',
+        'date' => $order->date->format('Y-m-d'), 'start_time' => '09:00', 'end_time' => '15:00',
+    ])->assertSessionHasNoErrors();
+
+    expect($order->events()->where('type', 'updated')->exists())->toBeFalse();
+});

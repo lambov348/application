@@ -14,7 +14,7 @@ use Illuminate\Validation\ValidationException;
  */
 class WorkerOrderActions
 {
-    public function __construct(private OrderWorkflow $workflow) {}
+    public function __construct(private OrderWorkflow $workflow, private Notifier $notifier) {}
 
     /** Accepting a scheduled order makes it "confirmed". */
     public function accept(Order $order, User $worker): void
@@ -41,14 +41,16 @@ class WorkerOrderActions
 
         $order->workers()->updateExistingPivot($worker->id, ['declined_at' => now(), 'accepted_at' => null]);
         $order->logEvent('worker_declined', ['worker_id' => $worker->id, 'worker' => $worker->name]);
+        $this->notifier->ownersOf($order, 'worker_declined', ['worker' => $worker->name]);
     }
 
     /** Needs at least 2 "after" photos (checked by the workflow). Stops all clocks on the order. */
-    public function complete(Order $order): void
+    public function complete(Order $order, User $worker): void
     {
-        DB::transaction(function () use ($order) {
+        DB::transaction(function () use ($order, $worker) {
             $this->workflow->transition($order, OrderStatus::Completed);
             WorkLog::where('order_id', $order->id)->open()->update(['ended_at' => now()]);
+            $this->notifier->ownersOf($order, 'order_completed', ['worker' => $worker->name]);
         });
     }
 }

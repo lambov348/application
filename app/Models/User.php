@@ -10,11 +10,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
 
 class User extends Authenticatable
 {
-    use BelongsToCompany, HasFactory, Notifiable, SoftDeletes;
+    use BelongsToCompany, HasFactory, SoftDeletes;
 
     protected $fillable = ['name', 'login', 'password', 'phone', 'locale', 'is_active'];
 
@@ -49,6 +48,11 @@ class User extends Authenticatable
     public function scopeWorkers(Builder $query): void
     {
         $query->where('role', Role::Worker);
+    }
+
+    public function pushSubscriptions(): HasMany
+    {
+        return $this->hasMany(PushSubscription::class);
     }
 
     public function shifts(): HasMany

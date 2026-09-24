@@ -8,6 +8,8 @@ use Illuminate\Support\Facades\Auth;
 
 class OrderAssignments
 {
+    public function __construct(private Notifier $notifier) {}
+
     /**
      * Replace the order's workers and record who was added or removed.
      *
@@ -24,6 +26,12 @@ class OrderAssignments
                     'type' => $type,
                     'data' => ['worker_id' => $user->id, 'worker' => $user->name],
                 ]);
+
+                $this->notifier->notify(
+                    $user,
+                    $type === 'worker_assigned' ? 'order_assigned' : 'order_unassigned',
+                    $this->notifier->orderData($order, $user),
+                );
             }
         }
     }

@@ -1,11 +1,15 @@
 <script setup>
+import CalendarLink from '@/Components/CalendarLink.vue';
 import LanguageSwitch from '@/Components/LanguageSwitch.vue';
+import PushSettings from '@/Components/PushSettings.vue';
 import PwaInstall from '@/Components/PwaInstall.vue';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import WorkerLayout from '@/Layouts/WorkerLayout.vue';
 import { usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import UpdatePasswordForm from './Partials/UpdatePasswordForm.vue';
+
+defineProps({ calendar: Object, push: Object });
 
 const page = usePage();
 const layout = computed(() => (page.props.auth.user.role === 'owner' ? AdminLayout : WorkerLayout));
@@ -21,6 +25,8 @@ const layout = computed(() => (page.props.auth.user.role === 'owner' ? AdminLayo
                 <p class="mt-2 text-sm text-muted">{{ $t('profile.language_hint') }}</p>
             </section>
             <PwaInstall />
+            <PushSettings :public-key="push.public_key" />
+            <CalendarLink :calendar="calendar" />
             <UpdatePasswordForm />
         </div>
     </component>

@@ -42,4 +42,23 @@ return [
     'comments' => [
         'sent' => 'Remark sent.',
     ],
+    'push' => [
+        'order_assigned' => ['title' => 'New order :number', 'body' => ':title · :when · :address'],
+        'order_unassigned' => ['title' => 'Removed from order :number', 'body' => ':title · :when'],
+        'order_changed' => ['title' => 'Order :number changed', 'body' => 'Now: :when · :address'],
+        'worker_declined' => ['title' => ':worker declined order :number', 'body' => ':title · :when'],
+        'order_completed' => ['title' => 'Order :number completed', 'body' => ':worker · :title'],
+        'new_comment' => ['title' => 'Remark on :number from :worker', 'body' => ':text'],
+        'shift_open' => ['title' => 'Your shift is still open', 'body' => 'Please end your shift. At 23:59 it is closed automatically and checked by the office.'],
+        'test' => ['title' => 'MöbelStock24', 'body' => 'Notifications work on this device.'],
+    ],
+    'calendar' => [
+        'client' => 'Client',
+        'workers' => 'Team',
+        'floor' => 'Floor :floor',
+        'elevator_yes' => 'Elevator',
+        'elevator_no' => 'No elevator',
+        'parking' => 'Parking: :note',
+        'regenerated' => 'New calendar link created. The old link no longer works.',
+    ],
 ];

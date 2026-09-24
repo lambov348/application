@@ -1,21 +1,29 @@
 <?php
 
 use App\Http\Controllers\Admin;
+use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\ChecklistController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\OrderCommentController;
 use App\Http\Controllers\OrderFileController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\PushSubscriptionController;
 use App\Http\Controllers\Worker;
 use Illuminate\Support\Facades\Route;
 
 Route::post('locale', [LocaleController::class, 'update'])->name('locale.update');
 Route::view('offline', 'offline')->name('offline');
+Route::get('calendar/{token}.ics', [CalendarController::class, 'feed'])
+    ->where('token', '[A-Za-z0-9]{48}')->middleware('throttle:60,1')->name('calendar.feed');
 
 Route::middleware(['auth', 'password.set'])->group(function () {
     Route::get('/', HomeController::class)->name('home');
     Route::get('profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::post('profile/calendar-token', [CalendarController::class, 'regenerate'])->name('calendar.regenerate');
+    Route::post('push-subscriptions', [PushSubscriptionController::class, 'store'])->name('push.subscribe');
+    Route::delete('push-subscriptions', [PushSubscriptionController::class, 'destroy'])->name('push.unsubscribe');
+    Route::post('push-test', [PushSubscriptionController::class, 'test'])->middleware('throttle:10,1')->name('push.test');
 
     // Shared by owner and workers; access is checked by the policies.
     Route::post('orders/{order}/files', [OrderFileController::class, 'store'])->middleware('throttle:120,1')->name('orders.files.store');
