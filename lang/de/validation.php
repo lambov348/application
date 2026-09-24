@@ -1,0 +1,41 @@
+<?php
+
+return [
+    'after' => ':attribute muss nach :date liegen.',
+    'array' => ':attribute muss eine Liste sein.',
+    'boolean' => ':attribute muss Ja oder Nein sein.',
+    'confirmed' => 'Die Bestätigung von :attribute stimmt nicht überein.',
+    'current_password' => 'Das Passwort ist falsch.',
+    'date' => ':attribute ist kein gültiges Datum.',
+    'date_format' => ':attribute muss dem Format :format entsprechen.',
+    'decimal' => ':attribute muss :decimal Nachkommastellen haben.',
+    'distinct' => ':attribute enthält einen doppelten Wert.',
+    'email' => ':attribute muss eine gültige E-Mail-Adresse sein.',
+    'enum' => 'Der gewählte Wert für :attribute ist ungültig.',
+    'exists' => 'Der gewählte Wert für :attribute ist ungültig.',
+    'in' => 'Der gewählte Wert für :attribute ist ungültig.',
+    'integer' => ':attribute muss eine ganze Zahl sein.',
+    'max' => [
+        'array' => ':attribute darf höchstens :max Einträge haben.',
+        'numeric' => ':attribute darf höchstens :max sein.',
+        'string' => ':attribute darf höchstens :max Zeichen lang sein.',
+    ],
+    'min' => [
+        'array' => ':attribute muss mindestens :min Einträge haben.',
+        'numeric' => ':attribute muss mindestens :min sein.',
+        'string' => ':attribute muss mindestens :min Zeichen lang sein.',
+    ],
+    'numeric' => ':attribute muss eine Zahl sein.',
+    'regex' => 'Das Format von :attribute ist ungültig.',
+    'required' => 'Bitte :attribute ausfüllen.',
+    'string' => ':attribute muss ein Text sein.',
+    'unique' => ':attribute ist bereits vergeben.',
+    'attributes' => [
+        'login' => 'Benutzername',
+        'password' => 'Passwort',
+        'current_password' => 'aktuelles Passwort',
+        'status' => 'Status',
+        'reason' => 'Grund',
+        'locale' => 'Sprache',
+    ],
+];

@@ -1,0 +1,41 @@
+<?php
+
+return [
+    'after' => 'The :attribute must be after :date.',
+    'array' => 'The :attribute must be a list.',
+    'boolean' => 'The :attribute must be yes or no.',
+    'confirmed' => 'The :attribute confirmation does not match.',
+    'current_password' => 'The password is incorrect.',
+    'date' => 'The :attribute is not a valid date.',
+    'date_format' => 'The :attribute must have the format :format.',
+    'decimal' => 'The :attribute must have :decimal decimal places.',
+    'distinct' => 'The :attribute has a duplicate value.',
+    'email' => 'The :attribute must be a valid e-mail address.',
+    'enum' => 'The selected :attribute is invalid.',
+    'exists' => 'The selected :attribute is invalid.',
+    'in' => 'The selected :attribute is invalid.',
+    'integer' => 'The :attribute must be a whole number.',
+    'max' => [
+        'array' => 'The :attribute may not have more than :max items.',
+        'numeric' => 'The :attribute may not be greater than :max.',
+        'string' => 'The :attribute may not be longer than :max characters.',
+    ],
+    'min' => [
+        'array' => 'The :attribute must have at least :min items.',
+        'numeric' => 'The :attribute must be at least :min.',
+        'string' => 'The :attribute must be at least :min characters.',
+    ],
+    'numeric' => 'The :attribute must be a number.',
+    'regex' => 'The :attribute format is invalid.',
+    'required' => 'Please fill in :attribute.',
+    'string' => 'The :attribute must be text.',
+    'unique' => 'The :attribute is already taken.',
+    'attributes' => [
+        'login' => 'username',
+        'password' => 'password',
+        'current_password' => 'current password',
+        'status' => 'status',
+        'reason' => 'reason',
+        'locale' => 'language',
+    ],
+];

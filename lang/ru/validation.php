@@ -1,0 +1,41 @@
+<?php
+
+return [
+    'after' => 'Поле «:attribute» должно быть позже :date.',
+    'array' => 'Поле «:attribute» должно быть списком.',
+    'boolean' => 'Поле «:attribute» должно быть «да» или «нет».',
+    'confirmed' => 'Поле «:attribute» не совпадает с подтверждением.',
+    'current_password' => 'Неверный пароль.',
+    'date' => 'Поле «:attribute» — неверная дата.',
+    'date_format' => 'Поле «:attribute» должно быть в формате :format.',
+    'decimal' => 'В поле «:attribute» должно быть :decimal знака после запятой.',
+    'distinct' => 'В поле «:attribute» есть повтор.',
+    'email' => 'Поле «:attribute» должно быть правильным адресом e-mail.',
+    'enum' => 'Выбрано неверное значение поля «:attribute».',
+    'exists' => 'Выбрано неверное значение поля «:attribute».',
+    'in' => 'Выбрано неверное значение поля «:attribute».',
+    'integer' => 'Поле «:attribute» должно быть целым числом.',
+    'max' => [
+        'array' => 'В поле «:attribute» не больше :max элементов.',
+        'numeric' => 'Поле «:attribute» не может быть больше :max.',
+        'string' => 'Поле «:attribute» не длиннее :max символов.',
+    ],
+    'min' => [
+        'array' => 'В поле «:attribute» минимум :min элементов.',
+        'numeric' => 'Поле «:attribute» не может быть меньше :min.',
+        'string' => 'Поле «:attribute» не короче :min символов.',
+    ],
+    'numeric' => 'Поле «:attribute» должно быть числом.',
+    'regex' => 'Поле «:attribute» заполнено неверно.',
+    'required' => 'Заполните поле «:attribute».',
+    'string' => 'Поле «:attribute» должно быть текстом.',
+    'unique' => 'Такое значение поля «:attribute» уже занято.',
+    'attributes' => [
+        'login' => 'Логин',
+        'password' => 'Пароль',
+        'current_password' => 'Текущий пароль',
+        'status' => 'Статус',
+        'reason' => 'Причина',
+        'locale' => 'Язык',
+    ],
+];

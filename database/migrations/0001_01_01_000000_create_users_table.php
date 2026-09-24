@@ -6,25 +6,39 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
-        Schema::create('users', function (Blueprint $table) {
+        Schema::create('companies', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->string('email')->unique();
-            $table->timestamp('email_verified_at')->nullable();
-            $table->string('password');
-            $table->rememberToken();
+            $table->string('default_locale', 5)->default('de');
+            $table->string('timezone')->default('Europe/Berlin');
+            $table->string('plan')->default('basic');
+            $table->boolean('is_active')->default(true);
             $table->timestamps();
+            $table->softDeletes();
         });
 
-        Schema::create('password_reset_tokens', function (Blueprint $table) {
-            $table->string('email')->primary();
-            $table->string('token');
-            $table->timestamp('created_at')->nullable();
+        Schema::create('users', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('company_id')->constrained();
+            $table->string('role', 20);
+            $table->string('name');
+            $table->string('login')->unique();
+            $table->string('password');
+            $table->string('phone')->nullable();
+            // null until first sign-in, then taken from the browser language
+            $table->string('locale', 5)->nullable();
+            $table->string('ics_token', 64)->nullable()->unique();
+            $table->boolean('is_active')->default(true);
+            $table->timestamp('last_login_at')->nullable();
+            // null = the user still has the start password from the owner
+            $table->timestamp('password_changed_at')->nullable();
+            $table->rememberToken();
+            $table->timestamps();
+            $table->softDeletes();
+
+            $table->index(['company_id', 'role']);
         });
 
         Schema::create('sessions', function (Blueprint $table) {
@@ -37,13 +51,10 @@ return new class extends Migration
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
-        Schema::dropIfExists('users');
-        Schema::dropIfExists('password_reset_tokens');
         Schema::dropIfExists('sessions');
+        Schema::dropIfExists('users');
+        Schema::dropIfExists('companies');
     }
 };

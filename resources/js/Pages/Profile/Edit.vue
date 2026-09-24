@@ -1,56 +1,25 @@
 <script setup>
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import DeleteUserForm from './Partials/DeleteUserForm.vue';
+import LanguageSwitch from '@/Components/LanguageSwitch.vue';
+import AdminLayout from '@/Layouts/AdminLayout.vue';
+import WorkerLayout from '@/Layouts/WorkerLayout.vue';
+import { usePage } from '@inertiajs/vue3';
+import { computed } from 'vue';
 import UpdatePasswordForm from './Partials/UpdatePasswordForm.vue';
-import UpdateProfileInformationForm from './Partials/UpdateProfileInformationForm.vue';
-import { Head } from '@inertiajs/vue3';
 
-defineProps({
-    mustVerifyEmail: {
-        type: Boolean,
-    },
-    status: {
-        type: String,
-    },
-});
+const page = usePage();
+const layout = computed(() => (page.props.auth.user.role === 'owner' ? AdminLayout : WorkerLayout));
 </script>
 
 <template>
-    <Head title="Profile" />
-
-    <AuthenticatedLayout>
-        <template #header>
-            <h2
-                class="text-xl font-semibold leading-tight text-gray-800"
-            >
-                Profile
-            </h2>
-        </template>
-
-        <div class="py-12">
-            <div class="mx-auto max-w-7xl space-y-6 sm:px-6 lg:px-8">
-                <div
-                    class="bg-white p-4 shadow sm:rounded-lg sm:p-8"
-                >
-                    <UpdateProfileInformationForm
-                        :must-verify-email="mustVerifyEmail"
-                        :status="status"
-                        class="max-w-xl"
-                    />
-                </div>
-
-                <div
-                    class="bg-white p-4 shadow sm:rounded-lg sm:p-8"
-                >
-                    <UpdatePasswordForm class="max-w-xl" />
-                </div>
-
-                <div
-                    class="bg-white p-4 shadow sm:rounded-lg sm:p-8"
-                >
-                    <DeleteUserForm class="max-w-xl" />
-                </div>
-            </div>
+    <component :is="layout" :title="$t('profile.title')">
+        <h1 class="page-title mb-6">{{ $t('profile.title') }}</h1>
+        <div class="flex max-w-xl flex-col gap-5">
+            <section class="card">
+                <h2 class="section-title">{{ $t('profile.language') }}</h2>
+                <LanguageSwitch />
+                <p class="mt-2 text-sm text-muted">{{ $t('profile.language_hint') }}</p>
+            </section>
+            <UpdatePasswordForm />
         </div>
-    </AuthenticatedLayout>
+    </component>
 </template>
