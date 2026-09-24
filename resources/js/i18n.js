@@ -65,3 +65,16 @@ export function formatTime(iso, timeZone = 'Europe/Berlin') {
     if (!iso) return '';
     return new Intl.DateTimeFormat(intl(), { hour: '2-digit', minute: '2-digit', timeZone }).format(new Date(iso));
 }
+
+/** "2026-09" → "September 2026" */
+export function formatMonth(ym, options = { month: 'long', year: 'numeric' }) {
+    const [y, m] = ym.split('-').map(Number);
+    return new Intl.DateTimeFormat(intl(), { ...options, timeZone: 'UTC' }).format(new Date(Date.UTC(y, m - 1, 1)));
+}
+
+/** Shift a "YYYY-MM" month by n. */
+export function addMonths(ym, n) {
+    const [y, m] = ym.split('-').map(Number);
+    const d = new Date(Date.UTC(y, m - 1 + n, 1));
+    return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}`;
+}

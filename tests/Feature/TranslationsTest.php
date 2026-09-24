@@ -49,3 +49,49 @@ test('interface strings contain no characters that break vue-i18n', function (st
         expect($value)->not->toMatch('/[@|]/', "Special character in {$locale}/ui.php → {$key}");
     }
 })->with(['de', 'en', 'ru']);
+
+test('every key used in the pages exists in the translations', function () {
+    $keys = flattenTranslations(require lang_path('de/ui.php'));
+    $missing = [];
+
+    foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator(resource_path('js'))) as $file) {
+        if (! in_array($file->getExtension(), ['vue', 'js'], true)) {
+            continue;
+        }
+        preg_match_all('/(?<![\w.])(?:\$t|t)\(\s*\'([a-z_]+(?:\.[a-z_]+)+)\'/', file_get_contents($file->getPathname()), $m);
+        foreach ($m[1] as $key) {
+            if (! array_key_exists($key, $keys)) {
+                $missing[] = "{$key} (".basename($file->getPathname()).')';
+            }
+        }
+    }
+
+    expect(array_unique($missing))->toBe([]);
+});
+
+test('translation files have no duplicate keys that silently overwrite each other', function (string $locale) {
+    foreach (glob(lang_path("{$locale}/*.php")) as $path) {
+        $tokens = token_get_all(file_get_contents($path));
+        $depth = 0;
+        $seen = [];
+        $prev = null;
+        foreach ($tokens as $i => $token) {
+            $text = is_array($token) ? $token[1] : $token;
+            if ($text === '[') {
+                $depth++;
+                $seen[$depth] = [];
+            } elseif ($text === ']') {
+                $depth--;
+            } elseif (is_array($token) && $token[0] === T_CONSTANT_ENCAPSED_STRING) {
+                $j = $i + 1;
+                while (isset($tokens[$j]) && is_array($tokens[$j]) && $tokens[$j][0] === T_WHITESPACE) {
+                    $j++;
+                }
+                if (isset($tokens[$j]) && is_array($tokens[$j]) && $tokens[$j][0] === T_DOUBLE_ARROW) {
+                    expect(in_array($text, $seen[$depth], true))->toBeFalse("Duplicate key {$text} in {$locale}/".basename($path));
+                    $seen[$depth][] = $text;
+                }
+            }
+        }
+    }
+})->with(['de', 'en', 'ru']);

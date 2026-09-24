@@ -10,6 +10,7 @@ use App\Models\Order;
 use App\Models\User;
 use App\Services\OrderAssignments;
 use App\Services\OrderNumberGenerator;
+use App\Services\Payroll\OrderCost;
 use App\Support\Money;
 use App\Support\OrderPresenter;
 use Illuminate\Database\Eloquent\Builder;
@@ -95,8 +96,14 @@ class OrderController extends Controller
 
         $order->load(['client', 'address', 'workers', 'events.user', 'checklist.doneBy', 'files.uploader', 'files.order', 'comments.user', 'workLogs.user']);
 
+        $labor = app(OrderCost::class)->laborCents($order);
+
         return Inertia::render('Admin/Orders/Show', [
-            'order' => OrderPresenter::detail($order, $request->user()),
+            'order' => [
+                ...OrderPresenter::detail($order, $request->user()),
+                'labor_cents' => $labor,
+                'remaining_cents' => $order->price_cents - $order->material_cents - $labor,
+            ],
         ]);
     }
 

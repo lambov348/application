@@ -4,14 +4,18 @@ namespace Database\Seeders;
 
 use App\Enums\OrderStatus;
 use App\Enums\PaymentStatus;
+use App\Enums\PayModel;
 use App\Enums\Role;
 use App\Models\Address;
 use App\Models\Client;
 use App\Models\Company;
 use App\Models\Order;
+use App\Models\Shift;
 use App\Models\User;
+use App\Models\WorkLog;
 use App\Services\OrderNumberGenerator;
 use App\Support\CurrentCompany;
+use Carbon\CarbonImmutable;
 use Illuminate\Database\Seeder;
 
 /**
@@ -33,7 +37,12 @@ class DatabaseSeeder extends Seeder
         $owner = $this->user($company, Role::Owner, 'Inhaber', 'admin', 'admin12345', changed: true);
         $dmitri = $this->user($company, Role::Worker, 'Dmitri K.', 'dmitri.k', 'start12345', changed: false, locale: 'ru');
         $oleg = $this->user($company, Role::Worker, 'Oleg S.', 'oleg.s', 'oleg12345', changed: true, locale: 'ru');
-        $this->user($company, Role::Worker, 'Jonas W.', 'jonas.w', 'jonas12345', changed: true, locale: 'de');
+        $jonas = $this->user($company, Role::Worker, 'Jonas W.', 'jonas.w', 'jonas12345', changed: true, locale: 'de');
+
+        $monthStart = now(config('app.display_timezone'))->startOfMonth()->toDateString();
+        $dmitri->payRates()->create(['model' => PayModel::Hourly, 'hourly_cents' => 1800, 'valid_from' => $monthStart]);
+        $oleg->payRates()->create(['model' => PayModel::PerJob, 'per_job_cents' => 9500, 'valid_from' => $monthStart]);
+        $jonas->payRates()->create(['model' => PayModel::Mixed, 'hourly_cents' => 1200, 'per_job_cents' => 4000, 'valid_from' => $monthStart]);
 
         $becker = $this->client($company, 'Anna Becker', '+49 170 1234567', 'anna.becker@example.de', 'Lindenstraße 12', '10969', 'Berlin', '3', true, 'Hof, Einfahrt links');
         $schulz = $this->client($company, 'Thomas Schulz', '+49 151 7654321', 't.schulz@example.de', 'Karl-Marx-Allee 90', '10243', 'Berlin', '5', false, null);
@@ -67,6 +76,16 @@ class DatabaseSeeder extends Seeder
             $order->status = $status;
             $order->save();
             $order->workers()->sync(collect($workers)->pluck('id'));
+        }
+
+        // Some clocked time on the kitchen job this morning (demo)
+        $kitchen = Order::where('title', 'Küchenmontage')->first();
+        foreach ([[$dmitri, '07:52', '11:34'], [$oleg, '08:05', '11:44']] as [$worker, $from, $to]) {
+            $start = CarbonImmutable::parse("{$today} {$from}", config('app.display_timezone'))->utc();
+            $end = CarbonImmutable::parse("{$today} {$to}", config('app.display_timezone'))->utc();
+            $kitchen->workers()->updateExistingPivot($worker->id, ['accepted_at' => $start]);
+            $shift = Shift::forceCreate(['company_id' => $company->id, 'user_id' => $worker->id, 'started_at' => $start, 'ended_at' => $end]);
+            WorkLog::create(['shift_id' => $shift->id, 'order_id' => $kitchen->id, 'user_id' => $worker->id, 'started_at' => $start, 'ended_at' => $end]);
         }
     }
 

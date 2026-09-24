@@ -3,13 +3,13 @@ import Icon from '@/Components/Icon.vue';
 import InputError from '@/Components/InputError.vue';
 import StatusBadge from '@/Components/StatusBadge.vue';
 import { useNow } from '@/Composables/useNow';
-import { formatDate, formatDuration, formatTermin, formatTime } from '@/i18n';
+import { formatDate, formatDuration, formatMoney, formatMonth, formatTermin, formatTime } from '@/i18n';
 import WorkerLayout from '@/Layouts/WorkerLayout.vue';
 import { Link, router, usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 
-const props = defineProps({ orders: Array, shift: { type: Object, default: null } });
+const props = defineProps({ orders: Array, shift: { type: Object, default: null }, my_month: Object });
 
 const page = usePage();
 const { t } = useI18n();
@@ -75,5 +75,17 @@ function endShift() {
                 </div>
             </Link>
         </div>
+
+        <section class="card mt-6">
+            <div class="mb-3 flex items-baseline justify-between">
+                <h2 class="font-semibold">{{ $t('worker.my_month', { month: formatMonth(my_month.month, { month: 'long' }) }) }}</h2>
+                <span class="text-xs text-muted">{{ $t('worker.private') }}</span>
+            </div>
+            <div class="grid grid-cols-3 gap-2 text-center">
+                <div><div class="font-display text-lg font-semibold">{{ my_month.hours.toLocaleString() }}</div><div class="text-xs text-muted">{{ $t('worker.hours_label') }}</div></div>
+                <div><div class="font-display text-lg font-semibold">{{ my_month.trips }}</div><div class="text-xs text-muted">{{ $t('worker.trips_label') }}</div></div>
+                <div><div class="font-display text-lg font-semibold">{{ formatMoney(my_month.gross_cents) }}</div><div class="text-xs text-muted">{{ $t('worker.gross_label') }}</div></div>
+            </div>
+        </section>
     </WorkerLayout>
 </template>

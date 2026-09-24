@@ -61,4 +61,12 @@ return [
         'parking' => 'Parking: :note',
         'regenerated' => 'New calendar link created. The old link no longer works.',
     ],
+    'payroll' => [
+        'closed' => 'Month closed. The results are saved and will not change.',
+        'errors' => [
+            'month_closed' => 'This month is closed. Hours, rates and amounts can no longer change; book a correction in the next month.',
+            'rate_date_order' => 'The new rate must start after the current rate.',
+            'too_long' => 'An entry cannot be longer than 16 hours.',
+        ],
+    ],
 ];

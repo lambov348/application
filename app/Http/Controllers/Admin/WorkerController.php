@@ -39,7 +39,7 @@ class WorkerController extends Controller
     {
         Gate::authorize('create', User::class);
 
-        return Inertia::render('Admin/Workers/Form', ['worker' => null]);
+        return Inertia::render('Admin/Workers/Form', ['worker' => null, 'rates' => null]);
     }
 
     public function store(WorkerRequest $request): RedirectResponse
@@ -71,6 +71,15 @@ class WorkerController extends Controller
 
         return Inertia::render('Admin/Workers/Form', [
             'worker' => $worker->only(['id', 'name', 'login', 'phone', 'locale', 'is_active']),
+            'rates' => $worker->isWorker() ? $worker->payRates()->get()->reverse()->values()->map(fn ($r) => [
+                'id' => $r->id,
+                'model' => $r->model->value,
+                'hourly_cents' => $r->hourly_cents,
+                'per_job_cents' => $r->per_job_cents,
+                'monthly_cents' => $r->monthly_cents,
+                'valid_from' => $r->valid_from->format('Y-m-d'),
+                'valid_to' => $r->valid_to?->format('Y-m-d'),
+            ]) : null,
         ]);
     }
 

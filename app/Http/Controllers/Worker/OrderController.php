@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Worker;
 use App\Enums\OrderStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
+use App\Models\PayrollAdjustment;
+use App\Services\Payroll\PayrollCalculator;
 use App\Support\OrderPresenter;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -26,7 +28,18 @@ class OrderController extends Controller
         $shift = $user->openShift();
         $current = $user->workLogs()->open()->with('order.address')->first();
 
+        $tz = config('app.display_timezone');
+        $now = now($tz);
+        $mine = app(PayrollCalculator::class)->calculate(
+            $user->loadMissing('company'), $now->year, $now->month,
+            PayrollAdjustment::where('user_id', $user->id)
+                ->whereHas('period', fn ($q) => $q->where('year', $now->year)->where('month', $now->month))
+                ->get(),
+        );
+
         return Inertia::render('Worker/Orders/Index', [
+            // Only the worker's own numbers
+            'my_month' => ['month' => $now->format('Y-m'), 'hours' => $mine['hours'], 'trips' => $mine['trips'], 'gross_cents' => $mine['gross_cents']],
             'orders' => $orders->map(fn (Order $o) => [
                 ...OrderPresenter::listItem($o, $user),
                 'accepted' => $o->pivot->accepted_at !== null,

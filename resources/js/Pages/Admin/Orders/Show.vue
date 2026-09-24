@@ -214,7 +214,7 @@ function eventText(e) {
                     <h2 class="section-title">{{ $t('orders.sections.hours') }}</h2>
                     <p v-if="order.hours.length === 0" class="text-sm text-muted">{{ $t('hours.none') }}</p>
                     <div v-for="h in order.hours" :key="h.worker" class="flex justify-between gap-2">
-                        <span>{{ h.worker }} <span v-if="h.running" class="text-xs text-accent">· {{ $t('hours.running') }}</span></span>
+                        <span>{{ h.worker }} <span v-if="h.running" class="text-xs text-accent">· {{ $t('hours.working_now') }}</span></span>
                         <span class="font-semibold">{{ formatDuration(h.seconds) }}</span>
                     </div>
                 </section>
@@ -223,6 +223,11 @@ function eventText(e) {
                     <h2 class="section-title">{{ $t('orders.sections.money') }}</h2>
                     <div class="flex justify-between"><span class="text-muted">{{ $t('orders.money.price') }}</span><span class="font-display font-semibold">{{ formatMoney(order.price_cents) }}</span></div>
                     <div class="flex justify-between"><span class="text-muted">{{ $t('orders.money.material') }}</span><span>{{ formatMoney(order.material_cents) }}</span></div>
+                    <div class="flex justify-between"><span class="text-muted">{{ $t('orders.money.labor') }}</span><span>{{ formatMoney(order.labor_cents) }}</span></div>
+                    <div class="flex justify-between border-t border-line pt-3">
+                        <span class="font-semibold">{{ $t('orders.money.remaining') }}</span>
+                        <span class="font-display text-lg font-semibold" :class="order.remaining_cents < 0 ? 'text-red-700' : 'text-accent'">{{ formatMoney(order.remaining_cents) }}</span>
+                    </div>
                     <div class="flex justify-between"><span class="text-muted">{{ $t('orders.fields.payment_status') }}</span><span>{{ $t(`payment.${order.payment_status}`) }}</span></div>
                     <div v-if="order.offer_no" class="flex justify-between"><span class="text-muted">{{ $t('orders.fields.offer_no') }}</span><span>{{ order.offer_no }}</span></div>
                     <div v-if="order.source" class="flex justify-between"><span class="text-muted">{{ $t('orders.fields.source') }}</span><span>{{ order.source }}</span></div>

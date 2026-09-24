@@ -14,6 +14,8 @@ const items = [
     { name: 'orders', route: 'admin.orders.index', match: 'admin.orders.*' },
     { name: 'clients', route: 'admin.clients.index', match: 'admin.clients.*' },
     { name: 'workers', route: 'admin.workers.index', match: 'admin.workers.*' },
+    { name: 'hours', route: 'admin.hours.index', match: 'admin.hours.*' },
+    { name: 'payroll', route: 'admin.payroll.index', match: 'admin.payroll.*' },
 ];
 </script>
 

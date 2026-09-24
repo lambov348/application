@@ -50,6 +50,11 @@ class User extends Authenticatable
         $query->where('role', Role::Worker);
     }
 
+    public function payRates(): HasMany
+    {
+        return $this->hasMany(PayRate::class)->orderBy('valid_from');
+    }
+
     public function pushSubscriptions(): HasMany
     {
         return $this->hasMany(PushSubscription::class);

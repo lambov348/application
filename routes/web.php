@@ -44,6 +44,19 @@ Route::middleware(['auth', 'password.set'])->group(function () {
         Route::resource('workers', Admin\WorkerController::class)->except(['show', 'destroy']);
         Route::post('workers/{worker}/toggle-active', [Admin\WorkerController::class, 'toggleActive'])->name('workers.toggle-active');
         Route::post('workers/{worker}/reset-password', [Admin\WorkerController::class, 'resetPassword'])->name('workers.reset-password');
+        Route::post('workers/{worker}/rates', [Admin\PayRateController::class, 'store'])->name('workers.rates.store');
+
+        Route::get('hours', [Admin\HoursController::class, 'index'])->name('hours.index');
+        Route::post('hours/logs', [Admin\HoursController::class, 'storeLog'])->name('hours.logs.store');
+        Route::put('hours/logs/{log}', [Admin\HoursController::class, 'updateLog'])->name('hours.logs.update');
+        Route::delete('hours/logs/{log}', [Admin\HoursController::class, 'destroyLog'])->name('hours.logs.destroy');
+        Route::put('hours/shifts/{shift}', [Admin\HoursController::class, 'updateShift'])->name('hours.shifts.update');
+        Route::post('hours/shifts/{shift}/reviewed', [Admin\HoursController::class, 'reviewShift'])->name('hours.shifts.reviewed');
+
+        Route::get('payroll', [Admin\PayrollController::class, 'index'])->name('payroll.index');
+        Route::post('payroll/{period}/adjustments', [Admin\PayrollController::class, 'storeAdjustment'])->name('payroll.adjustments.store');
+        Route::delete('payroll/adjustments/{adjustment}', [Admin\PayrollController::class, 'destroyAdjustment'])->name('payroll.adjustments.destroy');
+        Route::post('payroll/{period}/close', [Admin\PayrollController::class, 'close'])->name('payroll.close');
     });
 
     Route::middleware('role:worker')->prefix('worker')->name('worker.')->group(function () {
