@@ -4,6 +4,11 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
         <meta name="theme-color" content="#F4F3EF">
+        <link rel="manifest" href="/manifest.webmanifest">
+        <link rel="icon" type="image/png" href="/icons/favicon-64.png">
+        <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-title" content="MöbelStock24">
 
         <title inertia>{{ config('app.name', 'MöbelStock24') }}</title>
 

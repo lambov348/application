@@ -1,5 +1,6 @@
 <script setup>
 import LanguageSwitch from '@/Components/LanguageSwitch.vue';
+import PwaInstall from '@/Components/PwaInstall.vue';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import WorkerLayout from '@/Layouts/WorkerLayout.vue';
 import { usePage } from '@inertiajs/vue3';
@@ -19,6 +20,7 @@ const layout = computed(() => (page.props.auth.user.role === 'owner' ? AdminLayo
                 <LanguageSwitch />
                 <p class="mt-2 text-sm text-muted">{{ $t('profile.language_hint') }}</p>
             </section>
+            <PwaInstall />
             <UpdatePasswordForm />
         </div>
     </component>

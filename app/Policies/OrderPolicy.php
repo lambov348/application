@@ -46,4 +46,24 @@ class OrderPolicy
     {
         return $this->update($user, $order);
     }
+
+    /** Accept/decline, clock in on the order, complete it. Only an assigned worker. */
+    public function work(User $user, Order $order): bool
+    {
+        return $user->isWorker()
+            && $user->company_id === $order->company_id
+            && $order->isAssignedTo($user);
+    }
+
+    /** Add, edit and remove checklist items, upload plans and documents. */
+    public function manageContent(User $user, Order $order): bool
+    {
+        return $this->update($user, $order);
+    }
+
+    /** Tick checklist items, upload photos, write remarks. */
+    public function contribute(User $user, Order $order): bool
+    {
+        return $this->view($user, $order);
+    }
 }

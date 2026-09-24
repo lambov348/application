@@ -1,7 +1,11 @@
 <script setup>
 import InputError from '@/Components/InputError.vue';
+import OrderChecklist from '@/Components/OrderChecklist.vue';
+import OrderComments from '@/Components/OrderComments.vue';
+import OrderDocuments from '@/Components/OrderDocuments.vue';
+import OrderPhotos from '@/Components/OrderPhotos.vue';
 import StatusBadge from '@/Components/StatusBadge.vue';
-import { formatDateTime, formatMoney, formatTermin } from '@/i18n';
+import { formatDateTime, formatDuration, formatMoney, formatTermin } from '@/i18n';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import { Link, router, useForm, usePage } from '@inertiajs/vue3';
 import { ref } from 'vue';
@@ -57,7 +61,17 @@ function eventText(e) {
             });
         case 'worker_assigned':
         case 'worker_unassigned':
+        case 'worker_accepted':
+        case 'worker_declined':
             return t(`orders.events.${e.type}`, { name: e.data.worker });
+        case 'file_uploaded':
+        case 'file_deleted':
+            return t(`orders.events.${e.type}`, { name: e.data.name ?? t(`files.kinds.${e.data.kind}`) });
+        case 'checklist_added':
+        case 'checklist_removed':
+        case 'checklist_checked':
+        case 'checklist_unchecked':
+            return t(`orders.events.${e.type}`, { text: e.data.text });
         default:
             return t(`orders.events.${e.type}`);
     }
@@ -125,10 +139,35 @@ function eventText(e) {
                     <div>
                         <h2 class="section-title">{{ $t('orders.sections.workers') }}</h2>
                         <ul v-if="order.workers.length" class="flex flex-col gap-1">
-                            <li v-for="w in order.workers" :key="w.id">{{ w.name }}</li>
+                            <li v-for="w in order.workers" :key="w.id">
+                                {{ w.name }}
+                                <span v-if="w.accepted_at" class="text-xs text-accent">· {{ $t('orders.worker_accepted') }}</span>
+                                <span v-else-if="w.declined_at" class="text-xs text-red-700">· {{ $t('orders.worker_declined') }}</span>
+                            </li>
                         </ul>
                         <p v-else class="text-muted">{{ $t('common.none') }}</p>
                     </div>
+                </section>
+
+                <section class="card">
+                    <h2 class="section-title">{{ $t('orders.sections.checklist') }}</h2>
+                    <OrderChecklist :order="order" can-manage />
+                </section>
+
+                <section class="card">
+                    <h2 class="section-title">{{ $t('orders.sections.photos') }}</h2>
+                    <OrderPhotos :order="order" />
+                    <p v-if="order.next_statuses.includes('completed')" class="mt-3 text-xs text-muted">{{ $t('photos.need_after') }} · {{ order.after_photos }}/2</p>
+                </section>
+
+                <section class="card">
+                    <h2 class="section-title">{{ $t('orders.sections.files') }}</h2>
+                    <OrderDocuments :order="order" can-manage />
+                </section>
+
+                <section class="card">
+                    <h2 class="section-title">{{ $t('orders.sections.comments') }}</h2>
+                    <OrderComments :order="order" />
                 </section>
 
                 <section class="card">
@@ -169,6 +208,15 @@ function eventText(e) {
                     </form>
                     <p v-if="order.next_statuses.includes('completed')" class="text-xs text-muted">{{ $t('orders.completed_hint') }}</p>
                     <InputError :message="statusForm.errors.status || statusForm.errors.reason" />
+                </section>
+
+                <section class="card flex flex-col gap-2">
+                    <h2 class="section-title">{{ $t('orders.sections.hours') }}</h2>
+                    <p v-if="order.hours.length === 0" class="text-sm text-muted">{{ $t('hours.none') }}</p>
+                    <div v-for="h in order.hours" :key="h.worker" class="flex justify-between gap-2">
+                        <span>{{ h.worker }} <span v-if="h.running" class="text-xs text-accent">· {{ $t('hours.running') }}</span></span>
+                        <span class="font-semibold">{{ formatDuration(h.seconds) }}</span>
+                    </div>
                 </section>
 
                 <section class="card flex flex-col gap-3">

@@ -93,7 +93,7 @@ class OrderController extends Controller
     {
         Gate::authorize('view', $order);
 
-        $order->load(['client', 'address', 'workers', 'events.user']);
+        $order->load(['client', 'address', 'workers', 'events.user', 'checklist.doneBy', 'files.uploader', 'files.order', 'comments.user', 'workLogs.user']);
 
         return Inertia::render('Admin/Orders/Show', [
             'order' => OrderPresenter::detail($order, $request->user()),

@@ -23,4 +23,23 @@ return [
     'profile' => [
         'password_saved' => 'Passwort gespeichert.',
     ],
+    'shifts' => [
+        'started' => 'Schicht begonnen.',
+        'ended' => 'Schicht beendet.',
+        'errors' => [
+            'already_open' => 'Ihre Schicht läuft bereits.',
+            'not_open' => 'Es läuft keine Schicht.',
+            'start_shift_first' => 'Bitte zuerst die Schicht beginnen.',
+        ],
+    ],
+    'worker' => [
+        'accepted' => 'Auftrag angenommen.',
+        'declined' => 'Auftrag abgelehnt. Das Büro wurde informiert.',
+        'work_started' => 'Arbeit begonnen.',
+        'work_stopped' => 'Arbeit pausiert.',
+        'completed' => 'Auftrag :number erledigt. Danke!',
+    ],
+    'comments' => [
+        'sent' => 'Bemerkung gesendet.',
+    ],
 ];

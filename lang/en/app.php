@@ -23,4 +23,23 @@ return [
     'profile' => [
         'password_saved' => 'Password saved.',
     ],
+    'shifts' => [
+        'started' => 'Shift started.',
+        'ended' => 'Shift ended.',
+        'errors' => [
+            'already_open' => 'Your shift is already running.',
+            'not_open' => 'No shift is running.',
+            'start_shift_first' => 'Start your shift first.',
+        ],
+    ],
+    'worker' => [
+        'accepted' => 'Order accepted.',
+        'declined' => 'Order declined. The office has been informed.',
+        'work_started' => 'Work started.',
+        'work_stopped' => 'Work paused.',
+        'completed' => 'Order :number completed. Thank you!',
+    ],
+    'comments' => [
+        'sent' => 'Remark sent.',
+    ],
 ];

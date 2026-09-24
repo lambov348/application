@@ -31,3 +31,13 @@ createInertiaApp({
         color: '#0F6B5C',
     },
 });
+
+// Installable app (PWA). The install prompt is kept for the button in the profile.
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => {}));
+}
+window.addEventListener('beforeinstallprompt', (event) => {
+    event.preventDefault();
+    window.deferredInstallPrompt = event;
+    window.dispatchEvent(new Event('m24-installable'));
+});

@@ -53,3 +53,15 @@ export function formatTimeRange(start, end) {
 export function formatTermin(ymd, start, end, options) {
     return [formatDate(ymd, options), formatTimeRange(start, end)].filter(Boolean).join(' · ');
 }
+
+/** Seconds → "3 h 42 min" in the current language. */
+export function formatDuration(seconds) {
+    const total = Math.max(0, Math.floor(seconds / 60));
+    return i18n.global.t('hours.format', { h: Math.floor(total / 60), m: total % 60 });
+}
+
+/** "08:52" in the company timezone. */
+export function formatTime(iso, timeZone = 'Europe/Berlin') {
+    if (!iso) return '';
+    return new Intl.DateTimeFormat(intl(), { hour: '2-digit', minute: '2-digit', timeZone }).format(new Date(iso));
+}

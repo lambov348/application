@@ -64,6 +64,31 @@ class Order extends Model
         return $this->hasMany(OrderEvent::class)->latest('created_at')->latest('id');
     }
 
+    public function checklist(): HasMany
+    {
+        return $this->hasMany(ChecklistItem::class)->orderBy('position')->orderBy('id');
+    }
+
+    public function comments(): HasMany
+    {
+        return $this->hasMany(OrderComment::class)->oldest()->oldest('id');
+    }
+
+    public function workLogs(): HasMany
+    {
+        return $this->hasMany(WorkLog::class);
+    }
+
+    /** Write an entry to the order history (order_events). */
+    public function logEvent(string $type, array $data = []): void
+    {
+        $this->events()->create([
+            'user_id' => auth()->id(),
+            'type' => $type,
+            'data' => $data ?: null,
+        ]);
+    }
+
     public function isAssignedTo(User $user): bool
     {
         return $this->workers()->whereKey($user->id)->exists();

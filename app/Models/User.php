@@ -7,6 +7,7 @@ use App\Models\Concerns\BelongsToCompany;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -48,6 +49,21 @@ class User extends Authenticatable
     public function scopeWorkers(Builder $query): void
     {
         $query->where('role', Role::Worker);
+    }
+
+    public function shifts(): HasMany
+    {
+        return $this->hasMany(Shift::class);
+    }
+
+    public function openShift(): ?Shift
+    {
+        return $this->shifts()->open()->first();
+    }
+
+    public function workLogs(): HasMany
+    {
+        return $this->hasMany(WorkLog::class);
     }
 
     public function orders(): BelongsToMany
