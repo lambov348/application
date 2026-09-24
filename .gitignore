@@ -1,36 +1,24 @@
-# dependencies
-/node_modules
-
-# next.js
-/.next/
-/out/
-
-# production
-/build
-
-# misc
+*.log
 .DS_Store
-*.pem
-
-# debug
-npm-debug.log*
-
-# env
-.env*.local
-
-# database (SQLite) — генерируется локально через seed
-/prisma/dev.db
-/prisma/dev.db-journal
-
-# uploads — пользовательские файлы не коммитим, папку сохраняем через .gitkeep
-/storage/uploads/*
-!/storage/uploads/.gitkeep
-
-# typescript
-next-env.d.ts
-*.tsbuildinfo
-
-# hosting/local sqlite
-/prisma/prod.db
-/prisma/prod.db-journal
-/prod.db
+.env
+.env.backup
+.env.production
+.phpactor.json
+.phpunit.result.cache
+/.fleet
+/.idea
+/.nova
+/.phpunit.cache
+/.vscode
+/.zed
+/auth.json
+/node_modules
+/public/build
+/public/hot
+/public/storage
+/storage/*.key
+/storage/pail
+/vendor
+Homestead.json
+Homestead.yaml
+Thumbs.db
