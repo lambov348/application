@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Работник — мой день</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&amp;family=Unbounded:wght@500;600&amp;display=swap">
+<style>
+body{margin:0;font-family:'Onest',system-ui,sans-serif;color:#16181D;background:#F4F3EF}
+a{color:#0F6B5C}a:hover{color:#0A4F44}
+</style>
+</helmet>
+<div style="width: 390px; height: 900px; box-sizing: border-box; display: flex; flex-direction: column; background: #F4F3EF; font-family: 'Onest', system-ui, sans-serif; color: #16181D;">
+<div style="flex-grow: 1; display: flex; flex-direction: column; gap: 18px; padding: 24px 20px 16px; overflow: hidden;">
+<div style="display: flex; align-items: center; gap: 12px;">
+<div style="width: 44px; height: 44px; border-radius: 50%; background: #E3F0EC; color: #0F6B5C; display: flex; align-items: center; justify-content: center; font-weight: 600;">DK</div>
+<div style="display: flex; flex-direction: column; flex-grow: 1;">
+<span style="font-size: 18px; font-weight: 600;">{{t.hello}}</span>
+<span style="font-size: 14px; color: #585C63;">{{t.date}}</span>
+</div>
+<button type="button" aria-label="{{t.bell}}" style="width: 44px; height: 44px; border-radius: 12px; border: 1px solid #E4E2DC; background: #FFFFFF; display: flex; align-items: center; justify-content: center; color: #16181D;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"></path><path d="M10 20a2 2 0 0 0 4 0"></path></svg></button>
+</div>
+
+<div role="group" aria-label="{{t.langLabel}}" style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); padding: 4px; gap: 4px; background: #E9E7E1; border-radius: 12px;">
+<sc-for list="{{langs}}" as="l" hint-placeholder-count="3">
+<button type="button" aria-pressed="{{l.pressed}}" onClick="{{l.pick}}" style="height: 40px; border: 0; border-radius: 9px; font-family: inherit; font-size: 14px; font-weight: 600; background: {{l.bg}}; color: {{l.fg}};">{{l.label}}</button>
+</sc-for>
+</div>
+
+<section style="background: #16181D; color: #FFFFFF; border-radius: 20px; padding: 20px; display: flex; flex-direction: column; gap: 14px;">
+<div style="display: flex; justify-content: space-between; align-items: center;">
+<span style="display: flex; align-items: center; gap: 8px; font-size: 14px; color: #C9CCD1;"><span style="width: 8px; height: 8px; border-radius: 50%; background: #4ADE9B;"></span>{{t.shiftOn}}</span>
+<span style="font-size: 13px; color: #A9ADB4;">{{t.started}}</span>
+</div>
+<div style="font-family: 'Unbounded', sans-serif; font-weight: 600; font-size: 44px; letter-spacing: -0.02em; font-variant-numeric: tabular-nums;">03:42</div>
+<div style="font-size: 14px; color: #C9CCD1;">{{t.now}}</div>
+<button type="button" style="height: 52px; border: 0; border-radius: 14px; background: #FFFFFF; color: #16181D; font-family: inherit; font-size: 16px; font-weight: 600;">{{t.endShift}}</button>
+</section>
+
+<div style="display: flex; justify-content: space-between; align-items: baseline;">
+<h2 style="margin: 0; font-size: 17px; font-weight: 600;">{{t.today}}</h2>
+<span style="font-size: 14px; color: #585C63;">2</span>
+</div>
+<sc-for list="{{tasks}}" as="k" hint-placeholder-count="2">
+<a href="WorkerTask.dc.html" style="display: flex; gap: 14px; padding: 16px; background: #FFFFFF; border: 1px solid #E4E2DC; border-radius: 16px; text-decoration: none; color: #16181D;">
+<div style="width: 56px; flex-shrink: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 2px;">
+<span style="font-size: 17px; font-weight: 700; font-variant-numeric: tabular-nums;">{{k.time}}</span>
+<span style="font-size: 12px; color: #585C63;">{{k.until}}</span>
+</div>
+<div style="display: flex; flex-direction: column; gap: 6px; flex-grow: 1; min-width: 0;">
+<span style="font-size: 15px; font-weight: 600;">{{k.title}}</span>
+<span style="font-size: 13px; color: #585C63;">{{k.addr}}</span>
+<span style="align-self: flex-start; padding: 3px 9px; border-radius: 999px; font-size: 12px; font-weight: 600; background: {{k.bg}}; color: {{k.fg}};">{{k.status}}</span>
+</div>
+</a>
+</sc-for>
+
+<div style="display: flex; justify-content: space-between; align-items: baseline;">
+<h2 style="margin: 0; font-size: 17px; font-weight: 600;">{{t.month}}</h2>
+<span style="font-size: 13px; color: #585C63;">{{t.private}}</span>
+</div>
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px;">
+<sc-for list="{{stats}}" as="s" hint-placeholder-count="3">
+<div style="background: #FFFFFF; border: 1px solid #E4E2DC; border-radius: 14px; padding: 14px 12px; display: flex; flex-direction: column; gap: 4px;">
+<span style="font-family: 'Unbounded', sans-serif; font-weight: 600; font-size: 17px;">{{s.value}}</span>
+<span style="font-size: 12px; color: #585C63;">{{s.label}}</span>
+</div>
+</sc-for>
+</div>
+</div>
+
+<nav aria-label="{{t.nav}}" style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); padding: 8px 8px 20px; background: #FFFFFF; border-top: 1px solid #E4E2DC;">
+<a href="WorkerHome.dc.html" style="display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 6px 0; font-size: 12px; font-weight: 600; color: #0F6B5C; text-decoration: none;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="4" width="14" height="17" rx="2"></rect><path d="M9 4V3h6v1M9 10h6M9 14h6"></path></svg>{{t.tabTasks}}</a>
+<a href="#" style="display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 6px 0; font-size: 12px; color: #585C63; text-decoration: none;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"></rect><path d="M3 10h18M8 3v4M16 3v4"></path></svg>{{t.tabCal}}</a>
+<a href="#" style="display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 6px 0; font-size: 12px; color: #585C63; text-decoration: none;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"></circle><path d="M12 7.5V12l3 2"></path></svg>{{t.tabHours}}</a>
+<a href="#" style="display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 6px 0; font-size: 12px; color: #585C63; text-decoration: none;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"></circle><path d="M4 21c1-4 4.2-6 8-6s7 2 8 6"></path></svg>{{t.tabProfile}}</a>
+</nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":900},"lang":{"editor":"enum","options":["ru","en","de"],"default":"ru"}}'>
+class Component extends DCLogic {
+  renderVals() {
+    var self = this;
+    var lang = (this.state && this.state.lang) || this.props.lang || 'ru';
+    var T = {
+      ru: { hello: 'Привет, Дмитрий', date: 'Среда, 23 сентября', bell: 'Уведомления', langLabel: 'Язык', shiftOn: 'Смена идёт', started: 'начало 08:52', now: 'Сейчас: Musterstraße 12 · Монтаж кухни', endShift: 'Закончить смену', today: 'Мои задания сегодня', month: 'Мой сентябрь', private: 'видите только вы', nav: 'Навигация', tabTasks: 'Задания', tabCal: 'Календарь', tabHours: 'Часы', tabProfile: 'Профиль',
+        k1: 'Монтаж кухни · Becker', a1: 'Musterstraße 12, Berlin · 3 этаж', s1: 'Вы на объекте', u1: 'до 15:00',
+        k2: 'Сборка шкафа · Hoffmann', a2: 'Probeweg 7, Berlin', s2: 'Следующее', u2: 'до 17:30',
+        hours: '164 ч', lHours: 'отработано', lTrips: 'выезд', money: '3 012 €', lMoney: 'начислено' },
+      en: { hello: 'Hi, Dmitri', date: 'Wednesday, 23 September', bell: 'Notifications', langLabel: 'Language', shiftOn: 'Shift running', started: 'started 08:52', now: 'Now: Musterstraße 12 · Kitchen installation', endShift: 'End shift', today: 'My jobs today', month: 'My September', private: 'only you can see this', nav: 'Navigation', tabTasks: 'Jobs', tabCal: 'Calendar', tabHours: 'Hours', tabProfile: 'Profile',
+        k1: 'Kitchen installation · Becker', a1: 'Musterstraße 12, Berlin · 3rd floor', s1: 'You are on site', u1: 'until 15:00',
+        k2: 'Wardrobe assembly · Hoffmann', a2: 'Probeweg 7, Berlin', s2: 'Up next', u2: 'until 17:30',
+        hours: '164 h', lHours: 'worked', lTrips: 'jobs', money: '€3,012', lMoney: 'earned' },
+      de: { hello: 'Hallo, Dmitri', date: 'Mittwoch, 23. September', bell: 'Benachrichtigungen', langLabel: 'Sprache', shiftOn: 'Schicht läuft', started: 'Beginn 08:52', now: 'Jetzt: Musterstraße 12 · Küchenmontage', endShift: 'Schicht beenden', today: 'Meine Aufträge heute', month: 'Mein September', private: 'nur für Sie sichtbar', nav: 'Navigation', tabTasks: 'Aufträge', tabCal: 'Kalender', tabHours: 'Stunden', tabProfile: 'Profil',
+        k1: 'Küchenmontage · Becker', a1: 'Musterstraße 12, Berlin · 3. OG', s1: 'Sie sind vor Ort', u1: 'bis 15:00',
+        k2: 'Schrankmontage · Hoffmann', a2: 'Probeweg 7, Berlin', s2: 'Als Nächstes', u2: 'bis 17:30',
+        hours: '164 Std.', lHours: 'gearbeitet', lTrips: 'Einsätze', money: '3.012 €', lMoney: 'verdient' }
+    };
+    var t = T[lang] || T.ru;
+    var langs = [['ru', 'Русский'], ['en', 'English'], ['de', 'Deutsch']].map(function (p) {
+      var on = p[0] === lang;
+      return { label: p[1], pressed: on ? 'true' : 'false', bg: on ? '#FFFFFF' : 'transparent', fg: on ? '#16181D' : '#3D4047', pick: function () { self.setState({ lang: p[0] }); } };
+    });
+    return {
+      t: t,
+      langs: langs,
+      tasks: [
+        { time: '09:00', until: t.u1, title: t.k1, addr: t.a1, status: t.s1, bg: '#E4ECF7', fg: '#1F4E8C' },
+        { time: '15:30', until: t.u2, title: t.k2, addr: t.a2, status: t.s2, bg: '#EEECE7', fg: '#3D4047' }
+      ],
+      stats: [
+        { value: t.hours, label: t.lHours },
+        { value: '21', label: t.lTrips },
+        { value: t.money, label: t.lMoney }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

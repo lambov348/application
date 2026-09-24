@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Уведомления бота в мессенджере</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&amp;family=Unbounded:wght@500;600&amp;display=swap">
+<style>
+body{margin:0;font-family:'Onest',system-ui,sans-serif;color:#16181D;background:#F4F3EF}
+a{color:#0F6B5C}a:hover{color:#0A4F44}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; display: flex; flex-direction: column; background: #E9E6DF; font-family: 'Onest', system-ui, sans-serif; color: #16181D;">
+<div style="display: flex; align-items: center; gap: 12px; padding: 16px; background: #FFFFFF; border-bottom: 1px solid #E4E2DC;">
+<div style="width: 42px; height: 42px; border-radius: 50%; background: #16181D; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-family: 'Unbounded', sans-serif; font-weight: 600; font-size: 12px;">M24</div>
+<div style="display: flex; flex-direction: column;">
+<span style="font-size: 16px; font-weight: 600;">MöbelStock24</span>
+<span style="font-size: 13px; color: #585C63;">WhatsApp-бот · этап 2</span>
+</div>
+</div>
+
+<div style="flex-grow: 1; display: flex; flex-direction: column; gap: 10px; padding: 16px 14px; overflow: hidden;">
+<span style="align-self: center; padding: 4px 12px; border-radius: 999px; background: #D9D5CC; font-size: 12px; font-weight: 600; color: #3D4047;">22 сентября</span>
+
+<div style="align-self: flex-start; max-width: 300px; display: flex; flex-direction: column; gap: 6px;">
+<div style="background: #FFFFFF; border-radius: 16px 16px 16px 4px; padding: 12px 14px; display: flex; flex-direction: column; gap: 6px; font-size: 15px; line-height: 1.4;">
+<strong>Новое задание на завтра</strong>
+<span>Монтаж кухни · Anna Becker</span>
+<span>23.09, 09:00–15:00</span>
+<span>Musterstraße 12, 10115 Berlin · 3 этаж</span>
+<span style="font-size: 12px; color: #585C63; align-self: flex-end;">18:42</span>
+</div>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px;">
+<button type="button" style="height: 40px; border: 0; border-radius: 10px; background: #FFFFFF; font-family: inherit; font-size: 14px; font-weight: 600; color: #0F6B5C;">Принять</button>
+<button type="button" style="height: 40px; border: 0; border-radius: 10px; background: #FFFFFF; font-family: inherit; font-size: 14px; font-weight: 600; color: #0F6B5C;">Маршрут</button>
+<button type="button" style="grid-column: span 2; height: 40px; border: 0; border-radius: 10px; background: #FFFFFF; font-family: inherit; font-size: 14px; font-weight: 600; color: #0F6B5C;">Открыть в приложении</button>
+</div>
+</div>
+
+<div style="align-self: flex-end; max-width: 260px; background: #D6EBE4; border-radius: 16px 16px 4px 16px; padding: 10px 14px; font-size: 15px; display: flex; gap: 10px; align-items: flex-end;">
+<span>Принял</span><span style="font-size: 12px; color: #3D4047;">18:45</span>
+</div>
+
+<div style="align-self: flex-start; max-width: 300px; background: #FFFFFF; border-radius: 16px 16px 16px 4px; padding: 12px 14px; font-size: 15px; line-height: 1.4; display: flex; flex-direction: column; gap: 4px;">
+<span>Готово. Задание добавлено в ваш календарь: 23.09, 09:00.</span>
+<span style="font-size: 12px; color: #585C63; align-self: flex-end;">18:45</span>
+</div>
+
+<span style="align-self: center; padding: 4px 12px; border-radius: 999px; background: #D9D5CC; font-size: 12px; font-weight: 600; color: #3D4047;">Сегодня</span>
+
+<div style="align-self: flex-start; max-width: 300px; background: #FFFFFF; border-radius: 16px 16px 16px 4px; padding: 12px 14px; font-size: 15px; line-height: 1.4; display: flex; flex-direction: column; gap: 4px;">
+<span><strong>Через 1 час</strong> начало работ · Musterstraße 12. Парковка у входа согласована.</span>
+<span style="font-size: 12px; color: #585C63; align-self: flex-end;">08:00</span>
+</div>
+
+<div style="align-self: flex-start; max-width: 300px; background: #FFFFFF; border-radius: 16px 16px 16px 4px; padding: 12px 14px; font-size: 15px; line-height: 1.4; display: flex; flex-direction: column; gap: 4px;">
+<span>Перед завершением загрузите минимум 2 фото «после» — без них заказ не закроется.</span>
+<span style="font-size: 12px; color: #585C63; align-self: flex-end;">12:30</span>
+</div>
+</div>
+
+<div style="display: flex; align-items: center; gap: 10px; padding: 10px 12px 24px; background: #FFFFFF; border-top: 1px solid #E4E2DC;">
+<label style="flex-grow: 1; display: flex;"><input type="text" aria-label="Сообщение" placeholder="Сообщение" style="width: 100%; height: 44px; padding: 0 16px; border: 1px solid #E4E2DC; border-radius: 999px; font-family: inherit; font-size: 15px; background: #F6F5F1; color: #16181D; box-sizing: border-box;"></label>
+<button type="button" aria-label="Отправить" style="width: 44px; height: 44px; flex-shrink: 0; border: 0; border-radius: 50%; background: #0F6B5C; color: #FFFFFF; display: flex; align-items: center; justify-content: center;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></button>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

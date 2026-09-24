@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Админ — карточка заказа</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&amp;family=Unbounded:wght@500;600&amp;display=swap">
+<style>
+body{margin:0;font-family:'Onest',system-ui,sans-serif;color:#16181D;background:#F4F3EF}
+a{color:#0F6B5C}a:hover{color:#0A4F44}
+</style>
+</helmet>
+<div style="width: 1440px; height: 1260px; display: flex; background: #F4F3EF; font-family: 'Onest', system-ui, sans-serif; color: #16181D;">
+
+<aside style="width: 248px; flex-shrink: 0; background: #16181D; color: #FFFFFF; display: flex; flex-direction: column; gap: 28px; padding: 28px 18px; box-sizing: border-box;">
+<div style="display: flex; flex-direction: column; gap: 4px; padding: 0 12px;">
+<div style="font-family: 'Unbounded', sans-serif; font-weight: 600; font-size: 19px; letter-spacing: -0.01em;">MöbelStock24</div>
+<div style="font-size: 13px; color: #A9ADB4;">Портал · Администратор</div>
+</div>
+<nav aria-label="Главное меню" style="display: flex; flex-direction: column; gap: 2px;">
+<a href="Main.dc.html" style="display: flex; align-items: center; gap: 12px; padding: 11px 12px; border-radius: 10px; color: #C9CCD1; text-decoration: none; font-size: 15px;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"></rect><rect x="14" y="3" width="7" height="7" rx="1.5"></rect><rect x="3" y="14" width="7" height="7" rx="1.5"></rect><rect x="14" y="14" width="7" height="7" rx="1.5"></rect></svg>Обзор</a>
+<a href="AdminOrder.dc.html" style="display: flex; align-items: center; gap: 12px; padding: 11px 12px; border-radius: 10px; color: #FFFFFF; background: #2A2D34; text-decoration: none; font-size: 15px; font-weight: 600;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="4" width="14" height="17" rx="2"></rect><path d="M9 4V3h6v1M9 10h6M9 14h6M9 18h3"></path></svg>Заказы<span style="margin-left: auto; font-size: 12px; background: #0F6B5C; color: #FFFFFF; border-radius: 999px; padding: 2px 8px;">4</span></a>
+<a href="#" style="display: flex; align-items: center; gap: 12px; padding: 11px 12px; border-radius: 10px; color: #C9CCD1; text-decoration: none; font-size: 15px;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"></rect><path d="M3 10h18M8 3v4M16 3v4"></path></svg>Календарь</a>
+<a href="#" style="display: flex; align-items: center; gap: 12px; padding: 11px 12px; border-radius: 10px; color: #C9CCD1; text-decoration: none; font-size: 15px;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"></circle><path d="M2.5 20c.8-3.5 3.4-5.5 6.5-5.5s5.7 2 6.5 5.5M16 4.5a3.5 3.5 0 0 1 0 7M18 14.8c1.8.7 3 2.5 3.5 5.2"></path></svg>Сотрудники</a>
+<a href="AdminPayroll.dc.html" style="display: flex; align-items: center; gap: 12px; padding: 11px 12px; border-radius: 10px; color: #C9CCD1; text-decoration: none; font-size: 15px;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="6" width="18" height="14" rx="2"></rect><path d="M3 10h18M16 15h2"></path></svg>Зарплата</a>
+<a href="#" style="display: flex; align-items: center; gap: 12px; padding: 11px 12px; border-radius: 10px; color: #C9CCD1; text-decoration: none; font-size: 15px;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"></path></svg>Отчёты</a>
+<a href="#" style="display: flex; align-items: center; gap: 12px; padding: 11px 12px; border-radius: 10px; color: #C9CCD1; text-decoration: none; font-size: 15px;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"></circle><path d="M4 21c1-4 4.2-6 8-6s7 2 8 6"></path></svg>Клиенты</a>
+<a href="#" style="display: flex; align-items: center; gap: 12px; padding: 11px 12px; border-radius: 10px; color: #C9CCD1; text-decoration: none; font-size: 15px;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>Файлы</a>
+<a href="#" style="display: flex; align-items: center; gap: 12px; padding: 11px 12px; border-radius: 10px; color: #C9CCD1; text-decoration: none; font-size: 15px;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12"></path><circle cx="16" cy="6" r="2"></circle><circle cx="10" cy="12" r="2"></circle><circle cx="18" cy="18" r="2"></circle></svg>Настройки</a>
+</nav>
+<div style="margin-top: auto; display: flex; align-items: center; gap: 12px; padding: 0 8px;">
+<div style="width: 36px; height: 36px; border-radius: 50%; background: #0F6B5C; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 14px;">В</div>
+<div style="display: flex; flex-direction: column;"><span style="font-size: 14px; font-weight: 600;">Владелец</span><span style="font-size: 12px; color: #A9ADB4;">полный доступ</span></div>
+</div>
+</aside>
+
+<main style="flex-grow: 1; min-width: 0; display: flex; flex-direction: column; gap: 24px; padding: 32px 40px; box-sizing: border-box;">
+<header style="display: flex; align-items: flex-end; justify-content: space-between; gap: 24px;">
+<div style="display: flex; flex-direction: column; gap: 8px;">
+<div style="font-size: 14px; color: #585C63;"><a href="Main.dc.html" style="text-decoration: none;">Заказы</a> / #2026-0412</div>
+<div style="display: flex; align-items: center; gap: 14px;">
+<h1 style="margin: 0; font-family: 'Unbounded', sans-serif; font-weight: 600; font-size: 26px; letter-spacing: -0.02em;">Монтаж кухни · Anna Becker</h1>
+<span style="padding: 5px 12px; border-radius: 999px; font-size: 13px; font-weight: 600; background: #E4ECF7; color: #1F4E8C;">В работе</span>
+</div>
+</div>
+<div style="display: flex; gap: 10px;">
+<button type="button" style="height: 44px; padding: 0 16px; border: 1px solid #D9D6CF; background: #FFFFFF; border-radius: 12px; font-family: inherit; font-size: 14px; font-weight: 600; color: #16181D; display: flex; align-items: center; gap: 8px;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 4L3 11l6 2 2 6 3-4 5 4z"></path></svg>Уведомить работника</button>
+<button type="button" style="height: 44px; padding: 0 16px; border: 1px solid #D9D6CF; background: #FFFFFF; border-radius: 12px; font-family: inherit; font-size: 14px; font-weight: 600; color: #16181D; display: flex; align-items: center; gap: 8px;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"></rect><path d="M3 10h18M8 3v4M16 3v4"></path></svg>В календарь</button>
+<button type="button" style="height: 44px; padding: 0 18px; border: 0; background: #0F6B5C; border-radius: 12px; font-family: inherit; font-size: 14px; font-weight: 600; color: #FFFFFF;">Редактировать</button>
+</div>
+</header>
+
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; align-items: start;">
+<div style="grid-column: span 2; display: flex; flex-direction: column; gap: 16px;">
+
+<section style="background: #FFFFFF; border: 1px solid #E4E2DC; border-radius: 16px; padding: 24px; display: flex; flex-direction: column; gap: 18px;">
+<h2 style="margin: 0; font-size: 17px; font-weight: 600;">Клиент и объект</h2>
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px 24px;">
+<sc-for list="{{clientFields}}" as="f" hint-placeholder-count="6">
+<div style="display: flex; flex-direction: column; gap: 4px;">
+<span style="font-size: 13px; color: #585C63;">{{f.label}}</span>
+<span style="font-size: 15px; font-weight: 500;">{{f.value}}</span>
+</div>
+</sc-for>
+</div>
+</section>
+
+<section style="background: #FFFFFF; border: 1px solid #E4E2DC; border-radius: 16px; padding: 24px; display: flex; flex-direction: column; gap: 16px;">
+<h2 style="margin: 0; font-size: 17px; font-weight: 600;">Что делаем</h2>
+<p style="margin: 0; font-size: 15px; line-height: 1.55; color: #2A2D34;">Монтаж кухни 3,2 м: 7 нижних и 5 верхних модулей, врезка мойки и варочной панели, установка вытяжки, подгонка цоколя. Старую кухню демонтировать и вывезти.</p>
+<div style="display: flex; flex-wrap: wrap; gap: 24px; font-size: 14px;">
+<div style="display: flex; flex-direction: column; gap: 4px;"><span style="font-size: 13px; color: #585C63;">Термин</span><strong>23.09.2026 · 09:00–15:00</strong></div>
+<div style="display: flex; flex-direction: column; gap: 4px;"><span style="font-size: 13px; color: #585C63;">Исполнители</span>
+<div style="display: flex; gap: 8px;">
+<span style="padding: 4px 10px; border-radius: 999px; background: #E3F0EC; color: #0F6B5C; font-weight: 600; font-size: 13px;">Dmitri K. · €18/ч</span>
+<span style="padding: 4px 10px; border-radius: 999px; background: #E3F0EC; color: #0F6B5C; font-weight: 600; font-size: 13px;">Oleg S. · €95/заказ</span>
+</div></div>
+<div style="display: flex; flex-direction: column; gap: 4px;"><span style="font-size: 13px; color: #585C63;">Отработано сейчас</span><strong>Dmitri 3 ч 42 мин · Oleg 3 ч 39 мин</strong></div>
+</div>
+</section>
+
+<section style="background: #FFFFFF; border: 1px solid #E4E2DC; border-radius: 16px; padding: 24px; display: flex; flex-direction: column; gap: 16px;">
+<div style="display: flex; justify-content: space-between; align-items: center;">
+<h2 style="margin: 0; font-size: 17px; font-weight: 600;">Фото до / после</h2>
+<button type="button" style="height: 40px; padding: 0 14px; border: 1px solid #D9D6CF; background: #FFFFFF; border-radius: 10px; font-family: inherit; font-size: 14px; font-weight: 600; color: #16181D;">Загрузить фото</button>
+</div>
+<div style="font-size: 13px; font-weight: 600; color: #585C63; text-transform: uppercase; letter-spacing: 0.06em;">До · 4 фото · загрузил Dmitri K. в 09:06</div>
+<div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px;">
+<sc-for list="{{before}}" as="p" hint-placeholder-count="4">
+<div style="height: 128px; border-radius: 12px; background: #E6E3DC; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; color: #585C63; font-size: 13px;">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"></path><circle cx="12" cy="13" r="3.5"></circle></svg>{{p}}</div>
+</sc-for>
+</div>
+<div style="font-size: 13px; font-weight: 600; color: #585C63; text-transform: uppercase; letter-spacing: 0.06em;">После · ожидаем от исполнителя</div>
+<div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px;">
+<sc-for list="{{after}}" as="p" hint-placeholder-count="4">
+<div style="height: 128px; border-radius: 12px; border: 1.5px dashed #C9C5BC; display: flex; align-items: center; justify-content: center; color: #6B6F76; font-size: 13px;">{{p}}</div>
+</sc-for>
+</div>
+</section>
+
+<section style="background: #FFFFFF; border: 1px solid #E4E2DC; border-radius: 16px; padding: 24px; display: flex; flex-direction: column; gap: 8px;">
+<h2 style="margin: 0 0 8px; font-size: 17px; font-weight: 600;">Планы и файлы</h2>
+<sc-for list="{{files}}" as="f" hint-placeholder-count="3">
+<div style="display: flex; align-items: center; gap: 14px; padding: 12px 0; border-top: 1px solid #EEECE7;">
+<div style="width: 40px; height: 40px; border-radius: 10px; background: #F4F3EF; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: #3D4047;">{{f.ext}}</div>
+<div style="display: flex; flex-direction: column; gap: 2px; flex-grow: 1;"><span style="font-size: 14px; font-weight: 600;">{{f.name}}</span><span style="font-size: 13px; color: #585C63;">{{f.meta}}</span></div>
+<a href="#" style="font-size: 14px; font-weight: 600; text-decoration: none;">Скачать</a>
+</div>
+</sc-for>
+</section>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 16px;">
+<section style="background: #FFFFFF; border: 1px solid #E4E2DC; border-radius: 16px; padding: 24px; display: flex; flex-direction: column; gap: 12px;">
+<h2 style="margin: 0 0 4px; font-size: 17px; font-weight: 600;">Деньги по заказу</h2>
+<sc-for list="{{money}}" as="m" hint-placeholder-count="4">
+<div style="display: flex; justify-content: space-between; font-size: 14px;"><span style="color: #585C63;">{{m.label}}</span><span style="font-weight: 600;">{{m.value}}</span></div>
+</sc-for>
+<div style="display: flex; justify-content: space-between; align-items: baseline; border-top: 1px solid #EEECE7; padding-top: 12px;"><span style="font-size: 14px; font-weight: 600;">Остаётся бизнесу</span><span style="font-family: 'Unbounded', sans-serif; font-weight: 600; font-size: 22px; color: #0F6B5C;">€1 157</span></div>
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 14px; border-radius: 12px; background: #FBEEDD;">
+<span style="font-size: 14px; font-weight: 600; color: #8A4308;">Счёт выставлен · не оплачен</span>
+<button type="button" style="height: 36px; padding: 0 12px; border: 0; background: #FFFFFF; border-radius: 9px; font-family: inherit; font-size: 13px; font-weight: 600; color: #16181D;">Оплачено</button>
+</div>
+</section>
+
+<section style="background: #FFFFFF; border: 1px solid #E4E2DC; border-radius: 16px; padding: 24px; display: flex; flex-direction: column; gap: 14px;">
+<h2 style="margin: 0; font-size: 17px; font-weight: 600;">Замечания</h2>
+<sc-for list="{{notes}}" as="n" hint-placeholder-count="2">
+<div style="display: flex; flex-direction: column; gap: 6px; padding: 12px 14px; border-radius: 12px; background: #F6F5F1;">
+<div style="display: flex; justify-content: space-between; font-size: 13px;"><strong>{{n.who}}</strong><span style="color: #585C63;">{{n.when}}</span></div>
+<div style="font-size: 14px; line-height: 1.45;">{{n.text}}</div>
+</div>
+</sc-for>
+<label style="display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: #585C63;">Новое замечание
+<textarea rows="2" placeholder="Например: клиент просит перенести вытяжку на 10 см" style="font-family: inherit; font-size: 14px; padding: 10px 12px; border: 1px solid #D9D6CF; border-radius: 10px; resize: none; color: #16181D;"></textarea>
+</label>
+</section>
+
+<section style="background: #FFFFFF; border: 1px solid #E4E2DC; border-radius: 16px; padding: 24px; display: flex; flex-direction: column; gap: 14px;">
+<h2 style="margin: 0; font-size: 17px; font-weight: 600;">История</h2>
+<sc-for list="{{history}}" as="h" hint-placeholder-count="5">
+<div style="display: flex; gap: 12px; font-size: 14px;">
+<span style="width: 44px; flex-shrink: 0; color: #585C63; font-variant-numeric: tabular-nums;">{{h.time}}</span>
+<span style="width: 8px; height: 8px; margin-top: 6px; flex-shrink: 0; border-radius: 50%; background: {{h.dot}};"></span>
+<span style="line-height: 1.4;">{{h.text}}</span>
+</div>
+</sc-for>
+</section>
+</div>
+</div>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1260}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      clientFields: [
+        { label: 'Клиент', value: 'Anna Becker' },
+        { label: 'Телефон', value: '+49 151 0000 0000' },
+        { label: 'Источник', value: 'WhatsApp · Angebot #A-0412' },
+        { label: 'Адрес', value: 'Musterstraße 12, 10115 Berlin' },
+        { label: 'Этаж', value: '3 этаж, лифт есть' },
+        { label: 'Парковка', value: 'Место для Opel Combo согласовано' }
+      ],
+      before: ['Кухня общий вид', 'Стена под мойку', 'Розетки и вывод', 'Старая кухня'],
+      after: ['+ Общий вид', '+ Мойка', '+ Вытяжка', '+ Цоколь'],
+      files: [
+        { ext: 'PDF', name: 'Kuechenplan_Becker.pdf', meta: 'План кухни от клиента · 2,4 МБ · 18.09' },
+        { ext: 'PDF', name: 'Angebot_A-0412.pdf', meta: 'Предложение, подтверждено клиентом · 20.09' },
+        { ext: 'JPG', name: 'Aufmass_Wand.jpg', meta: 'Замеры стены · 1,1 МБ · 19.09' }
+      ],
+      money: [
+        { label: 'Стоимость работ', value: '€1 480' },
+        { label: 'Материал и расходы', value: '−€120' },
+        { label: 'Зарплата Dmitri (6 ч × €18)', value: '−€108' },
+        { label: 'Зарплата Oleg (за заказ)', value: '−€95' }
+      ],
+      notes: [
+        { who: 'Dmitri K.', when: 'сегодня 10:14', text: 'Не хватает двух цокольных панелей. Заказал, привезут завтра — доделаю в 08:00.' },
+        { who: 'Владелец', when: '22.09 18:40', text: 'Клиентка просит аккуратно с паркетом — подложить картон.' }
+      ],
+      history: [
+        { time: '20.09', dot: '#8C9097', text: 'Заказ создан из Angebot, клиент подтвердил' },
+        { time: '22.09', dot: '#8C9097', text: 'Назначены Dmitri K. и Oleg S., добавлено в календарь' },
+        { time: '22.09', dot: '#1F4E8C', text: 'Пуш-уведомление отправлено, оба подтвердили' },
+        { time: '09:04', dot: '#0F6B5C', text: 'Dmitri начал работу, отметка на объекте' },
+        { time: '10:14', dot: '#B7791F', text: 'Добавлено замечание: нехватка материала' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>
