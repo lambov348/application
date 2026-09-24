@@ -21,6 +21,12 @@ class DatabaseSeeder extends Seeder
 {
     public function run(OrderNumberGenerator $numbers): void
     {
+        if (Company::exists()) {
+            $this->command?->info('Demo data already exists, skipping.');
+
+            return;
+        }
+
         $company = Company::create(['name' => 'MöbelStock24']);
         app(CurrentCompany::class)->set($company->id);
 

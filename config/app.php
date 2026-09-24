@@ -55,6 +55,12 @@ return [
     'url' => env('APP_URL', 'http://localhost'),
 
     /*
+    | Always build links from APP_URL (needed behind the GitHub Codespaces proxy).
+    */
+
+    'force_url' => (bool) env('APP_FORCE_URL', false),
+
+    /*
     |--------------------------------------------------------------------------
     | Application Timezone
     |--------------------------------------------------------------------------
