@@ -1,0 +1,119 @@
+# Продакшен: Hetzner Cloud, Nürnberg или Falkenstein (глава 6 ТЗ — ЕС).
+#
+# Запуск из папки apps/platform:
+#   docker compose -f deploy/docker-compose.prod.yml --env-file deploy/.env up -d
+#
+# Наружу смотрит только Caddy. Ни база, ни Redis, ни само приложение портов
+# на хосте не открывают — до них можно достучаться лишь изнутри сети Docker.
+
+name: moebelstock24
+
+services:
+  # ─── Обратный прокси с автоматическим HTTPS ──────────────────────────────
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp" # HTTP/3
+    environment:
+      APP_DOMAIN: ${APP_DOMAIN:?APP_DOMAIN не задан}
+      ACME_EMAIL: ${ACME_EMAIL:?ACME_EMAIL не задан}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      # Сертификаты переживают перезапуск: Let's Encrypt ограничивает
+      # частоту выдачи, и терять их нельзя.
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      app:
+        condition: service_healthy
+
+  # ─── Приложение ──────────────────────────────────────────────────────────
+  app:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+      target: runner
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql://moebelstock24:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD не задан}@postgres:5432/moebelstock24?schema=public
+      AUTH_URL: https://${APP_DOMAIN}
+      REDIS_URL: redis://redis:6379
+    volumes:
+      # Фотографии и подписи. Без тома они исчезнут при пересборке образа.
+      - filestorage:/app/storage
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "5" }
+
+  # ─── Миграции и разовые команды ──────────────────────────────────────────
+  # Запускается один раз при каждом развёртывании и завершается. Приложение
+  # стартует только после того, как миграции применились.
+  #
+  # Этот же образ используется для разовых задач:
+  #   docker compose -f deploy/docker-compose.prod.yml --env-file deploy/.env \
+  #     run --rm -it migrate npm run create-user
+  migrate:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+      target: tools
+    restart: "no"
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql://moebelstock24:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD не задан}@postgres:5432/moebelstock24?schema=public
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # ─── База данных ─────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: moebelstock24
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD не задан}
+      POSTGRES_DB: moebelstock24
+      # Детерминированная сортировка: иначе порядок имён клиентов зависит
+      # от локали хоста.
+      LANG: C.UTF-8
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U moebelstock24 -d moebelstock24"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }
+
+  # ─── Очереди ─────────────────────────────────────────────────────────────
+  # Нужен автоматизациям Этапа 2. Держим сразу, чтобы подключение было
+  # одной строкой, но фоновых задач пока нет.
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--save", "60", "1", "--loglevel", "warning"]
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  pgdata:
+  redisdata:
+  filestorage:
+  caddy_data:
+  caddy_config:

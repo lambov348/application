@@ -47,6 +47,22 @@ QR-код для Google Authenticator, Aegis, 1Password или подобног�
 Дальше сотрудников заводит владелец в разделе «Benutzer» — командная строка
 больше не нужна.
 
+### На сервере (продакшен)
+
+Пошаговая инструкция — **[deploy/README.md](deploy/README.md)**: от пустого
+сервера Hetzner до работающей платформы, с брандмауэром, HTTPS, бэкапами
+и проверкой восстановления.
+
+Коротко:
+
+```bash
+cd apps/platform
+cp deploy/.env.example deploy/.env   # заполнить домен и секреты
+docker compose -f deploy/docker-compose.prod.yml --env-file deploy/.env up -d --build
+docker compose -f deploy/docker-compose.prod.yml --env-file deploy/.env \
+  run --rm -it migrate npm run create-user
+```
+
 ### Без Docker
 
 Нужен PostgreSQL 16. В `.env` замените в `DATABASE_URL` хост `postgres` на `localhost`.

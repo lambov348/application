@@ -1,0 +1,37 @@
+# Caddy сам получает и продлевает сертификат Let's Encrypt.
+# Домен и почта приходят из окружения (см. deploy/.env).
+
+{
+	email {$ACME_EMAIL}
+	# Заголовок Server не выдаёт версию — меньше подсказок сканерам.
+	servers {
+		metrics
+	}
+}
+
+{$APP_DOMAIN} {
+	encode zstd gzip
+
+	header {
+		# Только HTTPS, в том числе для поддоменов, на год вперёд.
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		# Браузер не должен угадывать тип файла — так не превратить
+		# загруженное фото в исполняемый скрипт.
+		X-Content-Type-Options "nosniff"
+		# Внутренний инструмент во фрейме чужого сайта делать нечего.
+		X-Frame-Options "DENY"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		# Ни камера, ни микрофон приложению не нужны: фото делаются
+		# обычным полем выбора файла.
+		Permissions-Policy "camera=(), microphone=(), geolocation=()"
+		-Server
+	}
+
+	# Внутренний инструмент в поиске не нужен.
+	header /* X-Robots-Tag "noindex, nofollow"
+
+	reverse_proxy app:3000 {
+		# Настоящий адрес клиента: по нему фиксируется принятие Angebot.
+		header_up X-Real-IP {remote_host}
+	}
+}
