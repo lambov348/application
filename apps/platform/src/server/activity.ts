@@ -63,6 +63,13 @@ export function diffOf<T extends Record<string, unknown>>(
   return diff;
 }
 
+/**
+ * Клиент транзакции расширенного Prisma Client. Готового типа для него нет:
+ * Prisma.TransactionClient описывает базовый клиент, а наш обвешан
+ * расширением «журнал только на добавление» — и типы не совпадают.
+ */
+export type TxClient = Parameters<Parameters<typeof db.$transaction>[0]>[0];
+
 export type LogInput = {
   entity: LoggedEntity;
   entityId: string;
@@ -70,7 +77,7 @@ export type LogInput = {
   userId: string | null;
   diff?: FieldDiff;
   /** Передавайте клиент транзакции, чтобы запись и журнал жили или падали вместе. */
-  tx?: Prisma.TransactionClient;
+  tx?: TxClient;
 };
 
 export async function logActivity({

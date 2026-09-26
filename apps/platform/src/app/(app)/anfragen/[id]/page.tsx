@@ -238,6 +238,16 @@ export default async function DealPage({
                           {tOffer("publicLink")}
                         </a>
                       )}
+                      {/* PDF собирается по требованию и кладётся в хранилище
+                          (src/server/jobs/offer-pdf.ts). */}
+                      <a
+                        href={`/api/angebote/${offer.id}/pdf`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-blau text-[13px] underline"
+                      >
+                        {tOffer("pdf")}
+                      </a>
                       {offer.acceptedAt && (
                         <span className="text-gruen text-[13px]">
                           {tOffer("acceptedAt", {

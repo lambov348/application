@@ -20,6 +20,22 @@ export function formatDate(date: Date, locale: Locale = "de"): string {
   }).format(date);
 }
 
+/**
+ * Дата с четырёхзначным годом — для документов.
+ *
+ * В интерфейсе короткая запись экономит место, но в протоколе приёмки и
+ * в предложении «26.09.26» выглядит как черновик, а документ живёт годами
+ * и попадает к бухгалтеру.
+ */
+export function formatDateDocument(date: Date, locale: Locale = "de"): string {
+  return new Intl.DateTimeFormat(LOCALE_TAGS[locale], {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    timeZone: DISPLAY_TIMEZONE,
+  }).format(date);
+}
+
 export function formatTime(date: Date, locale: Locale = "de"): string {
   return new Intl.DateTimeFormat(LOCALE_TAGS[locale], {
     timeStyle: "short",

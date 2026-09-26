@@ -73,7 +73,20 @@ export default async function AngebotPage({
         {t("dated", { date: formatDate(offer.sentAt) })}
       </p>
 
-      <p className="mb-4 text-sm">{offer.deal.title}</p>
+      <p className="mb-2 text-sm">{offer.deal.title}</p>
+
+      {/* Тот же документ, что и на экране, — файлом: клиенту нужно чем-то
+          показать предложение мужу, бухгалтеру или в банк. */}
+      <p className="mb-4">
+        <a
+          href={`/angebot/${token}/pdf`}
+          target="_blank"
+          rel="noreferrer"
+          className="text-blau text-[13px] underline"
+        >
+          {t("pdf")}
+        </a>
+      </p>
 
       <table className="border-linie bg-blatt mb-4 w-full border text-sm">
         <thead className="bg-beton border-linie border-b text-left">

@@ -1,12 +1,13 @@
 import { describe, expect, it } from "vitest";
 import {
-  formatDateTime,
-  toLocalInputValue,
-  fromLocalInputValue,
   berlinDateIso,
   berlinDayStart,
-  berlinWeekStart,
   berlinDays,
+  berlinWeekStart,
+  formatDateDocument,
+  formatDateTime,
+  fromLocalInputValue,
+  toLocalInputValue,
 } from "./datetime";
 
 describe("показ времени в Берлине", () => {
@@ -130,5 +131,22 @@ describe("границы суток и недели в Берлине", () => {
 
   it("отвергает мусор вместо даты", () => {
     expect(() => berlinDayStart("завтра")).toThrow();
+  });
+});
+
+describe("даты в документах", () => {
+  it("печатают четырёхзначный год", () => {
+    // «26.09.26» в протоколе приёмки выглядит как черновик, а документ
+    // живёт годами.
+    const date = new Date("2026-09-26T09:00:00Z");
+    expect(formatDateDocument(date)).toBe("26.09.2026");
+    expect(formatDateDocument(date, "ru")).toBe("26.09.2026");
+  });
+
+  it("считают день по берлинскому времени, а не по UTC", () => {
+    // 23:30 по UTC 31 декабря в Берлине — уже 1 января.
+    expect(formatDateDocument(new Date("2026-12-31T23:30:00Z"))).toBe(
+      "01.01.2027",
+    );
   });
 });

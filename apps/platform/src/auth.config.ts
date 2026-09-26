@@ -20,6 +20,9 @@ export const ROUTE_ACCESS: { prefix: string; roles: Role[] }[] = [
   { prefix: "/einsatzplan", roles: ["INHABER", "DISPONENT"] },
   { prefix: "/kunden", roles: ["INHABER", "DISPONENT"] },
   { prefix: "/heute", roles: ["INHABER", "DISPONENT"] },
+  // PDF предложения: в документе стоят цены, монтажнику их видеть нельзя
+  // (глава 4 ТЗ). Обработчик проверяет роль ещё раз.
+  { prefix: "/api/angebote", roles: ["INHABER", "DISPONENT"] },
 ];
 
 /** Маршруты, открытые без входа. */

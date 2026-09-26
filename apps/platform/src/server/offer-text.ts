@@ -38,8 +38,14 @@ export type OfferTextInput = {
 /**
  * Обращение. В немецком письме «Sehr geehrter Herr Schmidt» и «Guten Tag»
  * — разные степени формальности; при неизвестном поле выбираем нейтральное.
+ *
+ * Экспортируется, потому что то же обращение стоит в PDF: текст в WhatsApp
+ * и документ не должны обращаться к клиенту по-разному.
  */
-function salutation(input: OfferTextInput): string {
+export function salutation(input: {
+  customerSalutation: string | null;
+  customerLastName: string | null;
+}): string {
   const name = input.customerLastName?.trim();
   if (!name) return "Guten Tag,";
   if (input.customerSalutation === "Herr") return `Sehr geehrter Herr ${name},`;

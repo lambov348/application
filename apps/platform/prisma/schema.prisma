@@ -118,6 +118,17 @@ enum PhotoKind {
   SCHADEN
 }
 
+enum ExtraKind {
+  MATERIAL // докупленный материал
+  ZEIT // дополнительное время
+}
+
+enum ExtraStatus {
+  OFFEN // ждёт решения владельца
+  ANGENOMMEN
+  ABGELEHNT
+}
+
 enum PriceUnit {
   STUNDE
   STUECK
@@ -160,6 +171,8 @@ model User {
   activity       ActivityLog[]
   approvedPrices Deal[]                @relation("PriceApprover")
   uploadedPhotos JobPhoto[]            @relation("PhotoUploader")
+  extrasReported ExtraRequest[]        @relation("ExtraReporter")
+  extrasDecided  ExtraRequest[]        @relation("ExtraDecider")
 
   @@index([role, active])
 }
@@ -423,6 +436,7 @@ model Appointment {
   photos      JobPhoto[]
   timeEntries TimeEntry[]
   handover    Handover?
+  extras      ExtraRequest[]
 
   @@index([startAt])
   @@index([teamId, startAt])
@@ -479,6 +493,40 @@ model JobPhoto {
 }
 
 /// Abnahmeprotokoll — протокол приёмки с подписью клиента (глава 5.6.5).
+/// Сообщение монтажника с объекта: докупили материал, добавилось время
+/// (глава 5.6.7 ТЗ). Это заявка на доплату, а не цена заказа: решение
+/// принимает владелец, и до его решения сумма заказа не меняется.
+model ExtraRequest {
+  id            String      @id @default(cuid())
+  appointmentId String
+  appointment   Appointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+
+  kind        ExtraKind
+  description String
+
+  /// Потраченное монтажником в центах — для kind = MATERIAL.
+  /// Собственная запись монтажника, а не цена заказа, которой он не видит.
+  amountCents Int?
+
+  /// Дополнительные минуты — для kind = ZEIT.
+  extraMinutes Int?
+
+  status ExtraStatus @default(OFFEN)
+
+  reportedById String
+  reportedBy   User   @relation("ExtraReporter", fields: [reportedById], references: [id])
+
+  decidedById String?
+  decidedBy   User?     @relation("ExtraDecider", fields: [decidedById], references: [id])
+  decidedAt   DateTime? @db.Timestamptz(3)
+  decisionNote String?
+
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+
+  @@index([status, createdAt])
+  @@index([appointmentId])
+}
+
 model Handover {
   id            String      @id @default(cuid())
   appointmentId String      @unique

@@ -9,7 +9,12 @@
  *   SMOKE_URL=http://localhost:3000 \
  *   SMOKE_MONTEUR=max@firma.de:пароль \
  *   SMOKE_DISPONENT=petra@firma.de:пароль \
+ *   SMOKE_INHABER=chef@firma.de:пароль:секрет2FA \
+ *   SMOKE_LEAD_SECRET=$LEAD_WEBHOOK_SECRET \
  *   npm run smoke                       # в другом
+ *
+ * SMOKE_URL должен совпадать с AUTH_URL приложения: Auth.js строит обратные
+ * ссылки по AUTH_URL, и при расхождении хостов сессия не доедет.
  *
  * Учётные данные берутся из окружения и в репозиторий не попадают. Без них
  * проверки входа пропускаются, остальные выполняются.
@@ -689,6 +694,21 @@ if (!inhaber) {
     check("видны реквизиты фирмы", pub.includes("MöbelStock24 Test"));
     check("видна итоговая сумма", pub.includes("1.059,10"));
 
+    // Глава 5.4 требует два вывода: текст для WhatsApp и PDF.
+    const pdfRes = await fetch(`${BASE}${publicHref}/pdf`);
+    const pdfHead = pdfRes.ok
+      ? new Uint8Array(await pdfRes.arrayBuffer()).slice(0, 5)
+      : new Uint8Array();
+    check(
+      "клиент может скачать PDF предложения",
+      pdfRes.ok && String.fromCharCode(...pdfHead) === "%PDF-",
+      `(${pdfRes.status})`,
+    );
+    check(
+      "PDF предложения не кешируется прокси",
+      (pdfRes.headers.get("cache-control") ?? "").includes("private"),
+    );
+
     await guestPage.locator('button:has-text("Angebot annehmen")').click();
     // После принятия сервер перерисовывает страницу: форма исчезает,
     // появляется подтверждение с датой.
@@ -706,6 +726,47 @@ if (!inhaber) {
       ),
     );
     await guest.close();
+
+    // Офисный маршрут PDF: тот же документ сотруднику, но не монтажнику —
+    // в предложении стоят цены (глава 4 ТЗ).
+    const offerId = await page
+      .locator('a[href^="/api/angebote/"]')
+      .first()
+      .getAttribute("href");
+    if (offerId) {
+      const staffPdf = await page.evaluate(async (href) => {
+        const res = await fetch(href);
+        const buf = new Uint8Array(await res.arrayBuffer());
+        return { status: res.status, head: String.fromCharCode(...buf.slice(0, 5)) };
+      }, offerId);
+      check(
+        "сотрудник открывает PDF предложения",
+        staffPdf.status === 200 && staffPdf.head === "%PDF-",
+        `(${staffPdf.status})`,
+      );
+
+      if (monteur) {
+        const mctx = await browser.newContext();
+        const mp = await mctx.newPage();
+        await mp.goto(`${BASE}/m/anmelden`, { waitUntil: "networkidle" });
+        await mp.fill("#email", monteur.email);
+        await mp.fill("#password", monteur.password);
+        await submitOf(mp, "#email").click();
+        await settle(mp, 3000);
+        const denied = await mp.evaluate(
+          async (href) => (await fetch(href, { redirect: "manual" })).status,
+          offerId,
+        );
+        check(
+          "монтажнику PDF с ценами не отдаётся",
+          denied !== 200,
+          `(${denied})`,
+        );
+        await mctx.close();
+      }
+    } else {
+      check("сотрудник открывает PDF предложения", false);
+    }
 
     // Повторное принятие по той же ссылке невозможно.
     const guest2 = await browser.newContext();
@@ -728,8 +789,439 @@ if (!inhaber) {
   await ctx.close();
 }
 
-// ── 11. Скорость ─────────────────────────────────────────────────────────────
-console.log("\n11. Скорость");
+// ── 12. Кабинет монтажника: статусы, фото, приёмка ──────────────────────────
+console.log("\n12. Кабинет монтажника");
+if (!inhaber || !monteur) {
+  skip("работа на объекте", "нужны SMOKE_INHABER и SMOKE_MONTEUR");
+} else {
+  // Имя монтажника узнаём у него самого: в состав выезда его нужно отметить
+  // по имени, а в переменной окружения задан только адрес почты.
+  const nameCtx = await browser.newContext();
+  const namePage = await nameCtx.newPage();
+  await namePage.goto(`${BASE}/m/anmelden`, { waitUntil: "networkidle" });
+  await namePage.fill("#email", monteur.email);
+  await namePage.fill("#password", monteur.password);
+  await submitOf(namePage, "#email").click();
+  await settle(namePage, 3500);
+  const monteurName = await namePage
+    .locator("header span")
+    .first()
+    .innerText()
+    .catch(() => "");
+  await nameCtx.close();
+  check("монтажник вошёл в кабинет", monteurName.length > 0, `(${monteurName})`);
+
+  const ctx = await browser.newContext();
+  const page = await ctx.newPage();
+
+  // ── Офис: клиент, заявка с адресом, выезд на сегодня с этим монтажником ──
+  await page.goto(`${BASE}/login`, { waitUntil: "networkidle" });
+  await page.fill("#email", inhaber.email);
+  await page.fill("#password", inhaber.password);
+  await submitOf(page, "#email").click();
+  await settle(page, 2500);
+  await page.fill("#password", inhaber.password);
+  await page.fill("#totp", totpNow(inhaber.totpSecret));
+  await submitOf(page, "#totp").click();
+  await settle(page, 3500);
+
+  const marker = `Job${Date.now().toString().slice(-6)}`;
+  await page.goto(`${BASE}/kunden/neu`, { waitUntil: "networkidle" });
+  await page.fill("#lastName", marker);
+  await page.fill("#phone", "0176 79892037");
+  await submitOf(page, "#lastName").click();
+  await settle(page, 3500);
+
+  await page.locator('summary:has-text("Adresse hinzufügen")').last().click();
+  await page.fill("#street-neu", `${marker}allee 7`);
+  await page.fill("#zip-neu", "10627");
+  await page.fill("#city-neu", "Berlin");
+  await submitOf(page, "#street-neu").click();
+  await settle(page, 3000);
+
+  await page.goto(`${BASE}/anfragen/neu`, { waitUntil: "networkidle" });
+  await page.selectOption("#customerId", { label: marker });
+  await page.fill("#title", `${marker} Küche`);
+  await page.selectOption("#source", "EMPFEHLUNG");
+  await submitOf(page, "#title").click();
+  await settle(page, 3500);
+  const dealUrl = page.url();
+
+  await page.selectOption("#addressId", { index: 1 });
+  await page.locator('form:has(#title) button[type="submit"]').click();
+  await settle(page, 3000);
+
+  // Выезд на сегодня: кабинет монтажника показывает именно сегодняшний день.
+  const today = new Date();
+  const iso = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+  await page.goto(dealUrl, { waitUntil: "networkidle" });
+  await page.locator('summary:has-text("Termin planen")').last().click();
+  await page.waitForTimeout(400);
+  await page.fill("#start-neu", `${iso}T08:00`);
+  await page.fill("#end-neu", `${iso}T12:00`);
+  // Состав бригады решает, кто увидит выезд в своём кабинете.
+  const assigneeCount = await page
+    .locator('form:has(#start-neu) input[name="assignees"]')
+    .count();
+  check("монтажники предлагаются в состав выезда", assigneeCount > 0);
+
+  // Отмечаем именно того монтажника, под которым будем входить: иначе выезд
+  // достанется другому, и его кабинет останется пустым — это не ошибка кода.
+  const monteurBox = page.locator(
+    `form:has(#start-neu) label:has-text("${monteurName}") input[name="assignees"]`,
+  );
+  check("монтажник есть в списке состава", (await monteurBox.count()) > 0);
+  await monteurBox.first().check();
+  await submitOf(page, "#start-neu").click();
+  await settle(page, 3500);
+  check("выезд на сегодня запланирован", (await visibleText(page)).includes("08:00"));
+  await ctx.close();
+
+  // ── Монтажник ───────────────────────────────────────────────────────────
+  const mctx = await browser.newContext();
+  const m = await mctx.newPage();
+  await m.goto(`${BASE}/m/anmelden`, { waitUntil: "networkidle" });
+  await m.fill("#email", monteur.email);
+  await m.fill("#password", monteur.password);
+  await submitOf(m, "#email").click();
+  await settle(m, 3500);
+
+  const todayText = await visibleText(m);
+  const seesJob = todayText.includes(marker);
+  check("выезд виден в кабинете монтажника", seesJob);
+
+  if (!seesJob) {
+    skip("работа на объекте", "выезд не попал в состав этого монтажника");
+    await mctx.close();
+  } else {
+    check("есть кнопка навигации", todayText.includes("Navigation"));
+    check("виден телефон клиента", /0176|\+49/.test(todayText));
+
+    // Открываем именно сегодняшний выезд этой проверки: в списке могут
+    // лежать выезды от прошлых запусков с тем же временем.
+    await m
+      .locator(`li:has-text("${marker}") a:has-text("Auftrag öffnen")`)
+      .first()
+      .click();
+    await settle(m, 2000);
+    const jobUrl = m.url();
+    check("карточка выезда открылась", /\/m\/auftrag\//.test(jobUrl));
+
+    const jobText = await visibleText(m);
+    // Жёсткое требование главы 4: монтажник не видит цену заказа.
+    check("цены в кабинете нет", !/€/.test(jobText), "");
+
+    // Статус ставится одной кнопкой: она всегда показывает следующий шаг.
+    const nextStatus = () =>
+      m.locator('form:has(input[name="to"]) button[type="submit"]').first();
+
+    const stepLabel = await nextStatus().innerText();
+    check("предложен следующий шаг «unterwegs»", stepLabel.includes("unterwegs"), `(${stepLabel})`);
+    await nextStatus().click();
+    await settle(m, 2500);
+    check("статус «unterwegs» поставлен", (await visibleText(m)).includes("✓"));
+
+    // ── Фотографии «до»: очередь отправки ─────────────────────────────────
+    const jpeg = (tag) =>
+      Buffer.concat([
+        Buffer.from([0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10]),
+        Buffer.from("JFIF\0"),
+        Buffer.from(tag.padEnd(64, "x")),
+        Buffer.from([0xff, 0xd9]),
+      ]);
+
+    const beforeInput = m.locator('form:has(input[value="VORHER"]) input[type="file"]');
+    await beforeInput.setInputFiles([
+      { name: "a.jpg", mimeType: "image/jpeg", buffer: jpeg("vorher-a") },
+      { name: "b.jpg", mimeType: "image/jpeg", buffer: jpeg("vorher-b") },
+    ]);
+    await m.locator('form:has(input[value="VORHER"]) button[type="submit"]').click();
+    await settle(m, 4000);
+    await m.reload({ waitUntil: "networkidle" });
+    const afterUpload = await visibleText(m);
+    check(
+      "два снимка «до» приняты",
+      /Vorher[\s\S]{0,40}(vollständig|2 von 2)/.test(afterUpload),
+      "",
+    );
+
+    // Очередь в IndexedDB должна опустеть — снимки ушли.
+    const queueLeft = await m.evaluate(
+      () =>
+        new Promise((resolve) => {
+          const request = indexedDB.open("ms24-fotos", 1);
+          request.onsuccess = () => {
+            const db = request.result;
+            if (!db.objectStoreNames.contains("queue")) return resolve(0);
+            const all = db.transaction("queue").objectStore("queue").getAll();
+            all.onsuccess = () => resolve(all.result.length);
+            all.onerror = () => resolve(-1);
+          };
+          request.onerror = () => resolve(-1);
+        }),
+    );
+    check("очередь отправки пуста", queueLeft === 0, `(осталось ${queueLeft})`);
+
+    // ── Правило: «в работе» требует снимков «до», «готово» — «после» ───────
+    // Снимки «до» уже загружены, поэтому шаги проходят.
+    await nextStatus().click(); // angekommen
+    await settle(m, 2500);
+    await nextStatus().click(); // in Arbeit
+    await settle(m, 2500);
+    check(
+      "работа начата после снимков «до»",
+      (await visibleText(m)).includes("in Arbeit"),
+    );
+
+    await nextStatus().click(); // fertig — должно упереться в правило
+    await settle(m, 2500);
+    check(
+      "без снимков «после» закончить нельзя",
+      (await visibleText(m)).includes("nachher"),
+    );
+
+    // ── Учёт времени ──────────────────────────────────────────────────────
+    // Незакрытая запись на другом выезде мешает запустить новую — это верное
+    // поведение, но для проверки нужно чистое начало. Останавливаем чужие
+    // записи через интерфейс: заодно проверяется сама кнопка «стоп».
+    const stopLeftovers = async () => {
+      await m.goto(`${BASE}/m`, { waitUntil: "networkidle" });
+      const links = await m.locator('a[href^="/m/auftrag/"]').evaluateAll((els) =>
+        els.map((el) => el.getAttribute("href")),
+      );
+      for (const href of new Set(links)) {
+        await m.goto(`${BASE}${href}`, { waitUntil: "networkidle" });
+        const stop = m.locator('form button:has-text("Zeit stoppen")');
+        if ((await stop.count()) > 0) {
+          await stop.first().click();
+          await settle(m, 2500);
+        }
+      }
+      await m.goto(jobUrl, { waitUntil: "networkidle" });
+    };
+    await stopLeftovers();
+
+    await m.locator('form button:has-text("Zeit starten")').first().click();
+    await settle(m, 2500);
+    check("время пошло", (await visibleText(m)).includes("Läuft seit"));
+
+    // Остановка считает минуты на сервере, а не по часам телефона.
+    await m.locator('form button:has-text("Zeit stoppen")').first().click();
+    await settle(m, 2500);
+    check(
+      "время остановлено и посчитано",
+      /Erfasst insgesamt/.test(await visibleText(m)),
+    );
+
+    await m.locator('form button:has-text("Zeit starten")').first().click();
+    await settle(m, 2500);
+
+    // ── Материал/доплата уходит владельцу ─────────────────────────────────
+    await m.fill("#extraDescription", "Silikon");
+    await m.fill("#extraAmount", "12,00");
+    await m.locator('form:has(#extraDescription) button[type="submit"]').click();
+    await settle(m, 3000);
+    check(
+      "сообщение о доплате отправлено",
+      (await visibleText(m)).includes("Inhaber"),
+    );
+
+    // ── Приёмка требует снимков «после» ───────────────────────────────────
+    await m.goto(`${jobUrl}/abnahme`, { waitUntil: "networkidle" });
+    check(
+      "приёмка закрыта без снимков «после»",
+      (await visibleText(m)).includes("nachher"),
+    );
+
+    await m.goto(jobUrl, { waitUntil: "networkidle" });
+    const afterInput = m.locator('form:has(input[value="NACHHER"]) input[type="file"]');
+    await afterInput.setInputFiles([
+      { name: "c.jpg", mimeType: "image/jpeg", buffer: jpeg("nachher-a") },
+      { name: "d.jpg", mimeType: "image/jpeg", buffer: jpeg("nachher-b") },
+    ]);
+    await m.locator('form:has(input[value="NACHHER"]) button[type="submit"]').click();
+    await settle(m, 4000);
+
+    // Файл отдаётся только через /api/files и только своим.
+    const photoSrc = await m.locator('img[src^="/api/files/"]').first().getAttribute("src");
+    if (photoSrc) {
+      const own = await m.evaluate(async (src) => (await fetch(src)).status, photoSrc);
+      check("свой снимок открывается", own === 200, `(${own})`);
+      const stranger = await fetch(`${BASE}${photoSrc}`);
+      check(
+        "без входа снимок не отдаётся",
+        stranger.status === 401,
+        `(${stranger.status})`,
+      );
+    } else {
+      check("снимок появился на карточке", false);
+    }
+
+    // ── Протокол приёмки с подписью ───────────────────────────────────────
+    await m.goto(`${jobUrl}/abnahme`, { waitUntil: "networkidle" });
+    const pad = m.locator("canvas");
+    check("полотно подписи есть", (await pad.count()) > 0);
+
+    // Пустая подпись не проходит: пустой холст — тоже картинка.
+    await m.locator('form button:has-text("Abnahme abschließen")').click();
+    await settle(m, 2500);
+    check(
+      "без подписи приёмка не закрывается",
+      (await visibleText(m)).includes("unterschreiben"),
+    );
+
+    // Рисуем подпись движением указателя.
+    const box = await pad.boundingBox();
+    await m.mouse.move(box.x + 30, box.y + box.height / 2);
+    await m.mouse.down();
+    for (let i = 1; i <= 10; i++) {
+      await m.mouse.move(
+        box.x + 30 + i * (box.width - 60) / 10,
+        box.y + box.height / 2 + (i % 2 === 0 ? -18 : 18),
+      );
+    }
+    await m.mouse.up();
+    await m.waitForTimeout(200);
+
+    await m.locator('input[name="photoConsent"]').check();
+    await m.locator('form button:has-text("Abnahme abschließen")').click();
+    await settle(m, 6000);
+
+    const signedText = await visibleText(m);
+    check("протокол подписан", signedText.includes("Unterschrieben"));
+    check("ссылка на PDF появилась", signedText.includes("PDF"));
+
+    const pdfHref = await m
+      .locator('a[href^="/api/files/handover/"]')
+      .first()
+      .getAttribute("href");
+    if (pdfHref) {
+      const pdf = await m.evaluate(async (href) => {
+        const res = await fetch(href);
+        const buf = new Uint8Array(await res.arrayBuffer());
+        return {
+          status: res.status,
+          type: res.headers.get("content-type"),
+          head: String.fromCharCode(...buf.slice(0, 5)),
+          size: buf.length,
+        };
+      }, pdfHref);
+      check("PDF протокола отдаётся", pdf.status === 200 && pdf.head === "%PDF-", `(${pdf.size} Б)`);
+      check("тип файла — PDF", pdf.type === "application/pdf", `(${pdf.type})`);
+    } else {
+      check("PDF протокола отдаётся", false);
+    }
+
+    // После подписи фотографии и статус закрыты.
+    await m.goto(jobUrl, { waitUntil: "networkidle" });
+    const lockedText = await visibleText(m);
+    check("после подписи фото закрыты", lockedText.includes("gesperrt"));
+    // Подпись закрывает и таймер: иначе он шёл бы до вечера (это была ошибка).
+    check("подпись остановила время", !lockedText.includes("Läuft seit"));
+    check(
+      "кнопки статуса убраны",
+      (await m.locator('form:has(input[name="to"]) button[type="submit"]').count()) === 0,
+    );
+
+    await mctx.close();
+  }
+
+  // ── Владелец видит сообщение о доплате и решает по нему ─────────────────
+  const octx = await browser.newContext();
+  const o = await octx.newPage();
+  await o.goto(`${BASE}/login`, { waitUntil: "networkidle" });
+  await o.fill("#email", inhaber.email);
+  await o.fill("#password", inhaber.password);
+  await submitOf(o, "#email").click();
+  await settle(o, 2500);
+  await o.fill("#password", inhaber.password);
+  await o.fill("#totp", totpNow(inhaber.totpSecret));
+  await submitOf(o, "#totp").click();
+  await settle(o, 3500);
+
+  const boardText = await visibleText(o);
+  check("панель «Heute» показывает доплату", boardText.includes("Silikon"));
+  check("сумма доплаты видна владельцу", boardText.includes("12,00"));
+
+  const accept = o.locator('button:has-text("Annehmen")').first();
+  if ((await accept.count()) > 0) {
+    await accept.click();
+    await settle(o, 3000);
+    check(
+      "решение по доплате сохранено",
+      !(await visibleText(o)).includes("Silikon"),
+    );
+  } else {
+    check("владельцу предложено решение", false);
+  }
+  await octx.close();
+}
+
+// ── 13. Приём заявок с сайта ────────────────────────────────────────────────
+console.log("\n13. Приём заявок с сайта");
+{
+  const secret = process.env.SMOKE_LEAD_SECRET;
+  if (!secret) {
+    skip("вебхук заявок", "не задана SMOKE_LEAD_SECRET");
+  } else {
+    const { createHmac } = await import("node:crypto");
+    const post = (body, { signature, timestamp } = {}) => {
+      const ts = timestamp ?? String(Math.floor(Date.now() / 1000));
+      const sig =
+        signature ??
+        createHmac("sha256", secret).update(`${ts}.${body}`).digest("hex");
+      return fetch(`${BASE}/api/webhook/lead`, {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "x-ms24-timestamp": ts,
+          "x-ms24-signature": sig,
+        },
+        body,
+      });
+    };
+
+    const marker = `Web${Date.now().toString().slice(-6)}`;
+    const body = JSON.stringify({
+      lastName: marker,
+      phone: "0176 79892037",
+      message: `${marker} Küche montieren, 3. OG ohne Aufzug`,
+      street: `${marker}straße 1`,
+      zip: "10115",
+      city: "Berlin",
+      floor: "3. OG",
+      elevator: false,
+      services: ["KUECHENMONTAGE"],
+      utmSource: "google",
+    });
+
+    const ok = await post(body);
+    check("заявка с сайта принята", ok.status === 201, `(${ok.status})`);
+
+    // Повторная отправка той же формы не создаёт вторую заявку.
+    const again = await post(body);
+    const againBody = await again.json().catch(() => ({}));
+    check("повтор отправки не даёт дубля", againBody.duplicate === true);
+
+    const wrong = await post(body, { signature: "sha256=" + "0".repeat(64) });
+    check("чужая подпись отвергнута", wrong.status === 401, `(${wrong.status})`);
+
+    const stale = await post(body, {
+      timestamp: String(Math.floor(Date.now() / 1000) - 3600),
+    });
+    check("старый запрос отвергнут", stale.status === 401, `(${stale.status})`);
+
+    const unsigned = await fetch(`${BASE}/api/webhook/lead`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body,
+    });
+    check("без подписи не принимается", unsigned.status === 401, `(${unsigned.status})`);
+  }
+}
+
+// ── 14. Скорость ─────────────────────────────────────────────────────────────
+console.log("\n14. Скорость");
 {
   const times = [];
   for (let i = 0; i < 10; i++) {

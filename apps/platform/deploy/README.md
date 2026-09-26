@@ -185,7 +185,83 @@ docker compose -f deploy/docker-compose.prod.yml --env-file deploy/.env \
 
 ---
 
-## 9. Бэкапы
+## 9. Форма с сайта
+
+Заявки с сайта приходят на `POST https://ваш-домен/api/webhook/lead`. Запрос
+подписывается секретом `LEAD_WEBHOOK_SECRET` из `deploy/.env` — без подписи
+эндпоинт отвечает 401, без заданного секрета вообще закрыт.
+
+Что нужно от разработчика сайта: подписать тело запроса и приложить два
+заголовка.
+
+```php
+<?php
+// Пример на PHP: форма на сайте отправляет заявку в платформу.
+$secret  = getenv('MS24_WEBHOOK_SECRET');   // тот же LEAD_WEBHOOK_SECRET
+$payload = json_encode([
+  'salutation' => 'Herr',
+  'lastName'   => $_POST['name'],
+  'phone'      => $_POST['telefon'],
+  'email'      => $_POST['email'],
+  'message'    => $_POST['nachricht'],
+  'street'     => $_POST['strasse'],
+  'zip'        => $_POST['plz'],
+  'city'       => $_POST['ort'],
+  'floor'      => $_POST['etage'],
+  'elevator'   => isset($_POST['aufzug']),
+  'services'   => ['KUECHENMONTAGE'],       // необязательно
+  'utmSource'  => $_GET['utm_source'] ?? null,
+], JSON_UNESCAPED_UNICODE);
+
+$timestamp = (string) time();
+$signature = hash_hmac('sha256', $timestamp . '.' . $payload, $secret);
+
+$ch = curl_init('https://ваш-домен/api/webhook/lead');
+curl_setopt_array($ch, [
+  CURLOPT_POST       => true,
+  CURLOPT_POSTFIELDS => $payload,
+  CURLOPT_HTTPHEADER => [
+    'Content-Type: application/json',
+    'X-MS24-Timestamp: ' . $timestamp,
+    'X-MS24-Signature: ' . $signature,
+  ],
+  CURLOPT_RETURNTRANSFER => true,
+]);
+$response = curl_exec($ch);
+```
+
+Проверить с сервера, ничего не настраивая на сайте:
+
+```bash
+cd /opt/moebelstock24/apps/platform
+set -a && . deploy/.env && set +a
+
+BODY='{"lastName":"Testmann","phone":"0176 79892037","message":"Testanfrage von der Website"}'
+TS=$(date +%s)
+SIG=$(printf '%s.%s' "$TS" "$BODY" | openssl dgst -sha256 -hmac "$LEAD_WEBHOOK_SECRET" -hex | awk '{print $2}')
+
+curl -si https://$APP_DOMAIN/api/webhook/lead \
+  -H 'Content-Type: application/json' \
+  -H "X-MS24-Timestamp: $TS" \
+  -H "X-MS24-Signature: $SIG" \
+  --data "$BODY" | head -3
+```
+
+Ожидается `201` и номер заявки. Она появится в **Anfragen** в колонке «Neu»
+и на панели «Heute». `200` с `"duplicate": true` означает, что такая же
+заявка от этого клиента пришла меньше десяти минут назад — повторная отправка
+формы намеренно не создаёт вторую заявку.
+
+Из обязательных полей — только описание (`message` или `title`) и способ
+связи: телефон либо почта. Остальное диспетчер уточнит, и чек-лист заявки
+сразу покажет, чего не хватает.
+
+**Секрет не публикуйте в JavaScript на странице.** Подпись ставится на
+сервере сайта: секрет в коде страницы равнозначен открытому эндпоинту.
+
+---
+
+## 10. Бэкапы
 
 Ежедневный дамп базы и файлов, хранение 30 дней (глава 6 ТЗ).
 
@@ -236,7 +312,7 @@ ssh-copy-id -p 23 -s uXXXXX@uXXXXX.your-storagebox.de
 
 ---
 
-## 10. Обновление
+## 11. Обновление
 
 ```bash
 cd /opt/moebelstock24
@@ -276,7 +352,9 @@ $C run --rm migrate npx prisma migrate status             # состояние �
 - приложение в контейнере работает не от root;
 - секреты только в `deploy/.env` с правами 600, в репозиторий не попадают;
 - телеметрия Next.js отключена — она уходит за пределы ЕС;
-- бэкапы с проверкой целостности дампа и скриптом восстановления;
+- бэкапы с проверкой целостности дампа и скриптом восстановления, включая
+  том с фотографиями и подписями;
+- файлы из хранилища отдаются только через проверку прав, прямых ссылок нет;
 - брандмауэр, вход по SSH только по ключу, fail2ban.
 
 **Ещё нет:**
@@ -284,9 +362,9 @@ $C run --rm migrate npx prisma migrate status             # состояние �
 - **мониторинга.** Если ночью упадёт база, вы узнаете об этом утром от
   монтажника. Минимум — внешняя проверка доступности (UptimeRobot,
   Better Stack); полноценно — Sentry в европейском регионе (глава 6 ТЗ);
-- **отправки писем.** Angebot пока копируется текстом в WhatsApp; отправка
-  по email из системы появится вместе с SMTP-настройками;
-- **приёма заявок с сайта** — эндпоинт вебхука делается в куске 10;
+- **отправки писем.** Angebot и Abnahmeprotokoll собираются в PDF и лежат
+  в хранилище, ссылку можно отправить клиенту; автоматическая отправка по
+  email появится вместе с SMTP-настройками (Этап 2);
 - **второго сервера.** Всё на одном: диск, база, файлы. Для пяти человек это
   нормально, но это единственная точка отказа — и потому бэкапы за пределами
   сервера обязательны.

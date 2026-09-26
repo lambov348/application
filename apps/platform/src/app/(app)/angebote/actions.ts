@@ -17,6 +17,7 @@ import {
   checkLegalBlocks,
   checkLines,
 } from "@/server/rules/offer";
+import { ensureOfferPdf } from "@/server/jobs/offer-pdf";
 
 export type OfferState = { error?: string; success?: string; offerId?: string };
 
@@ -320,6 +321,16 @@ export async function sendOfferAction(
       },
     });
   });
+
+  // PDF собираем сразу после отправки: документ должен быть готов к тому
+  // моменту, когда сотрудник открывает ссылку, а не собираться по клику.
+  // Сбой сборки не отменяет отправку — предложение уже ушло, а PDF
+  // соберётся при первом обращении.
+  try {
+    await ensureOfferPdf(offerId);
+  } catch (error) {
+    console.error("Angebot-PDF konnte nicht erzeugt werden", error);
+  }
 
   revalidatePath(`/anfragen/${offer.dealId}`);
   revalidatePath("/angebote");
