@@ -17,6 +17,12 @@ WORKDIR /app
 ENV NEXT_TELEMETRY_DISABLED=1
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+# prisma generate не подключается к базе, но prisma.config.ts требует строку
+# подключения и намеренно падает, когда её нет. Значение нужно только этой
+# стадии и в рабочий образ не попадает: стадии не наследуют переменные.
+# Без него сборка образа падала на «Cannot resolve environment variable:
+# DATABASE_URL» — то есть при первом же `docker compose up --build` на сервере.
+ENV DATABASE_URL="postgresql://build:build@127.0.0.1:5432/build?schema=public"
 RUN npx prisma generate && npm run build
 
 # ─── Образ для миграций и разовых команд ────────────────────────────────────
