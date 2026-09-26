@@ -560,8 +560,176 @@ if (!inhaber) {
   await ctx.close();
 }
 
-// ── 10. Скорость ─────────────────────────────────────────────────────────────
-console.log("\n10. Скорость");
+// ── 10. Angebote: правила 9.1 и 9.2 ────────────────────────────────────────
+console.log("\n10. Предложения");
+if (!inhaber) {
+  skip("правила Angebot", "нужна SMOKE_INHABER");
+} else {
+  const ctx = await browser.newContext();
+  const page = await ctx.newPage();
+
+  await page.goto(`${BASE}/login`, { waitUntil: "networkidle" });
+  await page.fill("#email", inhaber.email);
+  await page.fill("#password", inhaber.password);
+  await submitOf(page, "#email").click();
+  await settle(page, 2500);
+  await page.fill("#password", inhaber.password);
+  await page.fill("#totp", totpNow(inhaber.totpSecret));
+  await submitOf(page, "#totp").click();
+  await settle(page, 3500);
+
+  // ── Клиент и заявка ─────────────────────────────────────────────────────
+  const marker = `Ang${Date.now().toString().slice(-6)}`;
+  await page.goto(`${BASE}/kunden/neu`, { waitUntil: "networkidle" });
+  await page.selectOption("#salutation", "Herr");
+  await page.fill("#lastName", marker);
+  await submitOf(page, "#lastName").click();
+  await settle(page, 3500);
+
+  await page.goto(`${BASE}/anfragen/neu`, { waitUntil: "networkidle" });
+  await page.selectOption("#customerId", { label: marker });
+  await page.fill("#title", `${marker} Küchenmontage`);
+  await page.selectOption("#source", "WEBSITE");
+  await submitOf(page, "#title").click();
+  await settle(page, 3500);
+  const dealUrl = page.url();
+
+  // ── Правило 9.2: без правовых блоков Angebot не сохранить ───────────────
+  // Стираем блоки в настройках и проверяем, что конструктор недоступен.
+  await page.goto(`${BASE}/einstellungen/firma`, { waitUntil: "networkidle" });
+  await page.fill("#warrantyText", "");
+  await page.fill("#parkingText", "");
+  await page.fill("#scopeText", "");
+  await page.locator('form:has(#warrantyText) button[type="submit"]').click();
+  await settle(page, 3000);
+
+  await page.goto(dealUrl, { waitUntil: "networkidle" });
+  const withoutLegal = await visibleText(page);
+  check(
+    "правило 9.2: без правовых блоков предложение не создать",
+    withoutLegal.includes("Regel 9.2"),
+  );
+  check(
+    "конструктор предложения скрыт",
+    !withoutLegal.includes("Entwurf speichern"),
+  );
+
+  // ── Заполняем блоки предложенными текстами ──────────────────────────────
+  await page.goto(`${BASE}/einstellungen/firma`, { waitUntil: "networkidle" });
+  check(
+    "предложенные тексты подставлены в форму",
+    (await page.inputValue("#warrantyText")).includes("Gewährleistung"),
+  );
+  check(
+    "показано предупреждение, что тексты не сохранены",
+    (await visibleText(page)).includes("noch nicht gespeichert"),
+  );
+  await page.fill("#companyName", "MöbelStock24 Test");
+  await page.fill("#taxNumber", "12/345/67890");
+  await page.locator('form:has(#warrantyText) button[type="submit"]').click();
+  await settle(page, 3000);
+  check("настройки сохранены", (await visibleText(page)).includes("gespeichert"));
+
+  // ── Создание черновика Angebot ──────────────────────────────────────────
+  await page.goto(dealUrl, { waitUntil: "networkidle" });
+  await page.locator('summary:has-text("Neues Angebot")').last().click();
+  await page.waitForTimeout(400);
+  await page.locator('input[name="lineDescription"]').first().fill("Küchenmontage");
+  await page.locator('input[name="linePrice"]').first().fill("890,00");
+  await page.locator('form:has(input[name="lineDescription"]) button[type="submit"]').first().click();
+  await settle(page, 3500);
+  const draft = await visibleText(page);
+  check("черновик предложения сохранён", draft.includes("v1"));
+  // 890,00 × 19 % = 169,10 → брутто 1.059,10
+  check("сумма с НДС посчитана", draft.includes("1.059,10"));
+
+  // ── Правило 9.1: без подтверждённой цены не отправить ───────────────────
+  // После сохранения черновика страница перерисовалась и блок свернулся.
+  await page.goto(dealUrl, { waitUntil: "networkidle" });
+  await page.locator("summary:has-text(\"v1\")").first().click();
+  await page.waitForTimeout(500);
+  await page.locator('button:has-text("Angebot versenden")').first().click();
+  await settle(page, 3000);
+  check(
+    "правило 9.1: без цены предложение не уходит",
+    (await visibleText(page)).includes("Ohne Preis"),
+  );
+
+  // Ставим цену и отправляем.
+  await page.goto(dealUrl, { waitUntil: "networkidle" });
+  await page.fill("#priceNet", "890,00");
+  await page.locator('form:has(#priceNet) button[type="submit"]').click();
+  await settle(page, 3000);
+
+  await page.goto(dealUrl, { waitUntil: "networkidle" });
+  await page.locator('summary:has-text("v1")').first().click();
+  await page.waitForTimeout(400);
+  await page.locator('button:has-text("Angebot versenden")').first().click();
+  await settle(page, 3500);
+  const sent = await visibleText(page);
+  check("предложение отправлено", sent.includes("versendet"));
+  check("заявка переведена в «Angebot raus»", sent.includes("Angebot raus"));
+  check("появился текст для WhatsApp", sent.includes("Sehr geehrter Herr"));
+  check("текст содержит блок гарантии", sent.includes("Gewährleistung"));
+  check("текст содержит просьбу о парковке", sent.includes("Parkplatz") || sent.includes("Parkmöglichkeit"));
+
+  // ── Публичная ссылка для клиента ────────────────────────────────────────
+  const publicHref = await page
+    .locator('a[href^="/angebot/"]')
+    .first()
+    .getAttribute("href");
+  check("публичная ссылка выдана", Boolean(publicHref), `(${publicHref})`);
+
+  if (publicHref) {
+    const guest = await browser.newContext();
+    const guestPage = await guest.newPage();
+    await guestPage.goto(BASE + publicHref, { waitUntil: "networkidle" });
+    const pub = await guestPage.evaluate(() => document.body.innerText);
+    check("клиент видит предложение без входа", pub.includes("Küchenmontage"));
+    check("видны реквизиты фирмы", pub.includes("MöbelStock24 Test"));
+    check("видна итоговая сумма", pub.includes("1.059,10"));
+
+    await guestPage.locator('button:has-text("Angebot annehmen")').click();
+    // После принятия сервер перерисовывает страницу: форма исчезает,
+    // появляется подтверждение с датой.
+    const accepted = await guestPage
+      .locator('text=angenommen')
+      .first()
+      .waitFor({ timeout: 15000 })
+      .then(() => true)
+      .catch(() => false);
+    check("клиент может принять предложение", accepted);
+    check(
+      "клиенту сказано, что будет дальше",
+      (await guestPage.evaluate(() => document.body.innerText)).includes(
+        "Terminabstimmung",
+      ),
+    );
+    await guest.close();
+
+    // Повторное принятие по той же ссылке невозможно.
+    const guest2 = await browser.newContext();
+    const guestPage2 = await guest2.newPage();
+    await guestPage2.goto(BASE + publicHref, { waitUntil: "networkidle" });
+    check(
+      "повторно принять нельзя",
+      (await guestPage2.evaluate(() => document.body.innerText)).includes("angenommen"),
+    );
+    await guest2.close();
+  }
+
+  // Принятие двигает заявку в «Bestätigt».
+  await page.goto(dealUrl, { waitUntil: "networkidle" });
+  check(
+    "заявка переведена в «Bestätigt»",
+    (await visibleText(page)).includes("Bestätigt"),
+  );
+
+  await ctx.close();
+}
+
+// ── 11. Скорость ─────────────────────────────────────────────────────────────
+console.log("\n11. Скорость");
 {
   const times = [];
   for (let i = 0; i < 10; i++) {

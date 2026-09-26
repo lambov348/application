@@ -2,11 +2,14 @@ import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { requireRole, canSeePrices } from "@/server/auth/guards";
 import { getDeal, getDealActivity } from "@/server/queries/deals";
+import { db } from "@/lib/db";
 import { formatCents, formatVatRate, grossCents } from "@/lib/money";
 import { formatDateTime } from "@/lib/datetime";
 import { formatPhone } from "@/lib/phone";
 import { MoveForm } from "../MoveForm";
 import { PlanForm } from "./PlanForm";
+import { OfferForm, SendOfferForm, CopyTextButton } from "./OfferForm";
+import { getSettings, legalBlocksMissing } from "@/server/queries/settings";
 import { listTeams, assignableUsers } from "@/server/queries/teams";
 import { appointmentsOfDeal } from "@/server/queries/appointments";
 import { toLocalInputValue } from "@/lib/datetime";
@@ -28,12 +31,28 @@ export default async function DealPage({
 
   const t = await getTranslations("deals");
   const tPlan = await getTranslations("plan");
-  const [activity, teams, members, appointments] = await Promise.all([
-    getDealActivity(id),
-    listTeams(),
-    assignableUsers(),
-    appointmentsOfDeal(id),
-  ]);
+  const tOffer = await getTranslations("offers");
+  const [activity, teams, members, appointments, settings, offers, catalog] =
+    await Promise.all([
+      getDealActivity(id),
+      listTeams(),
+      assignableUsers(),
+      appointmentsOfDeal(id),
+      getSettings(),
+      db.offer.findMany({
+        where: { dealId: id },
+        orderBy: { version: "desc" },
+        include: { items: { orderBy: { position: "asc" } } },
+      }),
+      db.serviceCatalogItem.findMany({
+        where: { active: true },
+        orderBy: [{ sort: "asc" }, { name: "asc" }],
+        select: { id: true, name: true, unit: true, priceCents: true },
+      }),
+    ]);
+
+  // Правило 9.2: без правовых блоков Angebot не сохранить.
+  const legalMissing = legalBlocksMissing(settings);
 
   // Значение по умолчанию: завтра 08:00–12:00 по Берлину.
   const tomorrow = new Date(Date.now() + 24 * 60 * 60_000);
@@ -156,6 +175,99 @@ export default async function DealPage({
           )}
         </div>
       </div>
+
+      {/* ── Angebote ───────────────────────────────────────────────── */}
+      <section className="mb-5">
+        <h3 className="mb-2 text-sm font-semibold uppercase">{tOffer("title")}</h3>
+
+        {legalMissing.length > 0 && (
+          <Alert tone="warning">
+            {tOffer("legalMissing")}{" "}
+            <a href="/einstellungen/firma" className="text-blau underline">
+              {tOffer("toSettings")}
+            </a>
+          </Alert>
+        )}
+
+        <div className="border-linie bg-blatt overflow-hidden rounded-[3px] border">
+          {offers.length === 0 && (
+            <p className="text-text-2 px-4 py-3 text-sm">{tOffer("none")}</p>
+          )}
+
+          {offers.map((offer) => (
+            <details key={offer.id} open={offer.status === "GESENDET"}>
+              <summary className="hover:bg-beton/60 cursor-pointer px-4 py-2.5 text-sm">
+                <b>v{offer.version}</b>
+                <span className="ml-2">{formatCents(offer.totalGrossCents)}</span>
+                <span className="text-text-2 ml-2 text-xs">
+                  {tOffer(`statuses.${offer.status}`)}
+                  {offer.sentAt && ` · ${formatDateTime(offer.sentAt)}`}
+                </span>
+              </summary>
+
+              <div className="border-linie border-t p-4">
+                {offer.status === "ENTWURF" ? (
+                  <>
+                    <OfferForm
+                      dealId={deal.id}
+                      offerId={offer.id}
+                      canEdit={legalMissing.length === 0}
+                      catalog={catalog}
+                      initialLines={offer.items.map((i) => ({
+                        description: i.description,
+                        qty: i.qty.toString(),
+                        unit: i.unit,
+                        price: (i.unitPriceCents / 100).toFixed(2).replace(".", ","),
+                      }))}
+                    />
+                    <div className="border-linie mt-4 border-t pt-4">
+                      <SendOfferForm offerId={offer.id} />
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="mb-3 flex flex-wrap items-center gap-2">
+                      <CopyTextButton text={offer.bodyText} />
+                      {offer.acceptToken && (
+                        <a
+                          href={`/angebot/${offer.acceptToken}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-blau text-[13px] underline"
+                        >
+                          {tOffer("publicLink")}
+                        </a>
+                      )}
+                      {offer.acceptedAt && (
+                        <span className="text-gruen text-[13px]">
+                          {tOffer("acceptedAt", {
+                            when: formatDateTime(offer.acceptedAt),
+                            ip: offer.acceptedIp ?? "—",
+                          })}
+                        </span>
+                      )}
+                    </div>
+                    <pre className="border-linie bg-beton overflow-x-auto rounded-[3px] border p-3 text-xs whitespace-pre-wrap">
+                      {offer.bodyText}
+                    </pre>
+                  </>
+                )}
+              </div>
+            </details>
+          ))}
+
+          {legalMissing.length === 0 && (
+            <details>
+              <summary className="text-blau hover:bg-beton/60 cursor-pointer px-4 py-2.5 text-sm font-semibold">
+                + {tOffer("newVersion")}
+              </summary>
+              <div className="border-linie border-t p-4">
+                <OfferForm dealId={deal.id} canEdit catalog={catalog} />
+              </div>
+            </details>
+          )}
+        </div>
+      </section>
 
       {/* ── Выезды ─────────────────────────────────────────────────── */}
       <section className="mb-5">

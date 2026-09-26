@@ -10,6 +10,7 @@ import type {
   DealStatus,
   LeadSource,
   LostReason,
+  PriceUnit,
   ServiceType,
 } from "@prisma/client";
 
@@ -106,3 +107,12 @@ export const SERVICE_COLORS: Record<string, string> = {
 };
 
 export const DEFAULT_SERVICE_COLOR = "#2A3034";
+
+/** Единицы измерения позиций Angebot. */
+export const PRICE_UNITS: PriceUnit[] = [
+  "STUNDE",
+  "STUECK",
+  "PAUSCHALE",
+  "QM",
+  "LFM",
+];

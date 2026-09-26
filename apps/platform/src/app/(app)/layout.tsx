@@ -25,6 +25,9 @@ export default async function AppLayout({
     einsatzplan: t("einsatzplan"),
     benutzer: t("benutzer"),
     teams: t("teams"),
+    firma: t("firma"),
+    leistungen: t("leistungen"),
+    angebote: t("angebote"),
   };
 
   return (

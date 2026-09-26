@@ -20,7 +20,9 @@
       "MONTEUR": "Monteur",
       "BUCHHALTUNG": "Buchhaltung"
     },
-    "teams": "Kolonnen"
+    "teams": "Kolonnen",
+    "firma": "Firma",
+    "leistungen": "Leistungen"
   },
   "login": {
     "subtitle": "Anmeldung für Mitarbeiter",
@@ -269,6 +271,20 @@
       "team": {
         "created": "Kolonne angelegt",
         "updated": "Kolonne geändert"
+      },
+      "offer": {
+        "created": "Angebot erstellt",
+        "updated": "Angebot geändert",
+        "sent": "Angebot versendet",
+        "accepted": "Angebot vom Kunden angenommen",
+        "declined": "Angebot vom Kunden abgelehnt"
+      },
+      "settings": {
+        "updated": "Einstellungen geändert"
+      },
+      "catalog": {
+        "created": "Katalogposition angelegt",
+        "updated": "Katalogposition geändert"
       }
     },
     "status": "Status",
@@ -383,5 +399,121 @@
       "MONTEUR": "Monteur",
       "BUCHHALTUNG": "Buchhaltung"
     }
+  },
+  "offers": {
+    "title": "Angebote",
+    "none": "Noch kein Angebot erstellt.",
+    "newVersion": "Neues Angebot",
+    "statuses": {
+      "ENTWURF": "Entwurf",
+      "GESENDET": "versendet",
+      "ANGENOMMEN": "angenommen",
+      "ABGELEHNT": "abgelehnt",
+      "ERSETZT": "ersetzt"
+    },
+    "units": {
+      "STUNDE": "Stunde",
+      "STUECK": "Stück",
+      "PAUSCHALE": "Pauschale",
+      "QM": "m²",
+      "LFM": "lfm"
+    },
+    "description": "Position",
+    "qty": "Menge",
+    "unit": "Einheit",
+    "unitPrice": "Einzelpreis",
+    "addLine": "Position",
+    "removeLine": "Position entfernen",
+    "fromCatalog": "Aus dem Katalog",
+    "totalsHint": "Summen und Umsatzsteuer berechnet der Server beim Speichern.",
+    "saveDraft": "Entwurf speichern",
+    "send": "Angebot versenden",
+    "sendHint": "Geht nur mit einem Preis, den der Inhaber freigegeben hat (Regel 9.1).",
+    "cannotEdit": "Ein versendetes Angebot wird nicht geändert. Bitte eine neue Version anlegen.",
+    "legalMissing": "Ohne Gewährleistung, Park-Hinweis und Umfangs-Vorbehalt lässt sich kein Angebot speichern (Regel 9.2).",
+    "toSettings": "Jetzt hinterlegen",
+    "copyText": "Text kopieren",
+    "copied": "kopiert",
+    "publicLink": "Link für den Kunden",
+    "acceptedAt": "angenommen am {when} (IP {ip})",
+    "listEmpty": "Noch keine Angebote. Angebote entstehen in der Anfrage.",
+    "deal": "Anfrage",
+    "customer": "Kunde",
+    "state": "Status",
+    "sum": "Gesamt"
+  },
+  "publicOffer": {
+    "title": "Angebot",
+    "version": "Version {version}",
+    "dated": "vom {date}",
+    "position": "Leistung",
+    "amount": "Betrag",
+    "net": "Netto",
+    "vat": "USt",
+    "total": "Gesamt",
+    "accept": "Angebot annehmen",
+    "decline": "Ablehnen",
+    "acceptHint": "Mit dem Annehmen bestätigen Sie den beschriebenen Umfang und den Preis. Datum und IP werden gespeichert.",
+    "alreadyAccepted": "Vielen Dank — Sie haben dieses Angebot am {date} angenommen. Wir melden uns zur Terminabstimmung.",
+    "alreadyDeclined": "Dieses Angebot wurde abgelehnt."
+  },
+  "settings": {
+    "intro": "Diese Angaben stehen auf jedem Angebot und später auf jeder Rechnung.",
+    "companyTitle": "Firmendaten",
+    "companyHint": "Pflichtangaben nach §14 UStG.",
+    "companyName": "Firmenname",
+    "street": "Straße und Hausnummer",
+    "zip": "PLZ",
+    "city": "Ort",
+    "email": "E-Mail",
+    "phone": "Telefon",
+    "taxNumber": "Steuernummer",
+    "taxNumberHint": "Steuernummer oder USt-IdNr — eines von beiden genügt",
+    "vatId": "USt-IdNr",
+    "taxTitle": "Steuern und Sätze",
+    "taxMode": "Besteuerung",
+    "taxModeHint": "Bestimmt, ob auf Dokumenten Umsatzsteuer ausgewiesen wird",
+    "regelbesteuerung": "Regelbesteuerung",
+    "kleinunternehmer": "Kleinunternehmer (§19 UStG)",
+    "vatPercent": "Steuersatz in %",
+    "vatIgnored": "Wird im Kleinunternehmer-Modus nicht berechnet",
+    "hourlyRate": "Stundensatz",
+    "hourlyRateHint": "Pro Monteur, netto",
+    "legalTitle": "Textbausteine für Angebote",
+    "legalHint": "Diese drei Blöcke stehen auf jedem Angebot. Ohne sie lässt sich kein Angebot speichern (Regel 9.2).",
+    "legalPrefilled": "Diese Texte sind ein Vorschlag und noch nicht gespeichert. Bitte durchlesen, anpassen und speichern. Sie sprechen im Namen Ihrer Firma — eine kurze Prüfung durch Steuerberater oder Anwalt ist sinnvoll.",
+    "warrantyText": "Gewährleistung",
+    "parkingText": "Hinweis zum Parken",
+    "scopeText": "Vorbehalt zum Umfang",
+    "rulesTitle": "Regeln im Betrieb",
+    "travelBuffer": "Fahrtzeit zwischen Terminen (Minuten)",
+    "travelBufferHint": "Darunter warnt der Einsatzplan",
+    "minPhotosBefore": "Fotos „vorher“ mindestens",
+    "minPhotosAfter": "Fotos „nachher“ mindestens",
+    "minPhotosAfterHint": "Ohne sie lässt sich ein Auftrag nicht abschließen (Regel 9.4)",
+    "save": "Einstellungen speichern"
+  },
+  "catalog": {
+    "intro": "Der Leistungskatalog ist Ihre Preisliste. Positionen daraus lassen sich mit einem Klick ins Angebot übernehmen.",
+    "createTitle": "Neue Position",
+    "empty": "Noch keine Position angelegt.",
+    "name": "Bezeichnung",
+    "unit": "Einheit",
+    "units": {
+      "STUNDE": "Stunde",
+      "STUECK": "Stück",
+      "PAUSCHALE": "Pauschale",
+      "QM": "m²",
+      "LFM": "lfm"
+    },
+    "price": "Preis",
+    "priceHint": "Netto, pro Einheit",
+    "service": "Leistungsart",
+    "serviceHint": "Optional, für spätere Auswertungen",
+    "noService": "— keine —",
+    "sort": "Reihenfolge",
+    "active": "Position aktiv",
+    "create": "Anlegen",
+    "save": "Speichern"
   }
 }
